@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 find files -type f -name '*.yaml' |
 	while read -r file; do
@@ -6,8 +6,8 @@ find files -type f -name '*.yaml' |
 		name=$(basename "$file" .yaml)
 		kubectl create secret generic "$name" --namespace="$namespace" --from-file=values.yaml="$file" --dry-run=client -o yaml >"secrets/${namespace}-${name}.yaml"
 	done
-find secrets -type f -print0 |
-	xargs -I {} sh -c 'kubeseal -f secrets/$1 -o yaml > seal-secrets/seal-$1' -- {}
+find secrets -name '*.yaml' -type f -printf "%f\0" |
+	xargs --null -I {} sh -c 'kubeseal -f secrets/$1 -o yaml > seal-secrets/seal-$1' -- {}
 echo "resources:" >seal-secrets/kustomization.yaml
-find secrets -type f -print0 |
-	xargs -I {} sh -c 'echo "- seal-$1" >> seal-secrets/kustomization.yaml' -- {}
+find seal-secrets -name '*.yaml' -type f ! -name 'kustomization.yaml' -printf "%f\0" |
+	xargs --null -I {} sh -c 'echo "- seal-$1" >> seal-secrets/kustomization.yaml' -- {}
