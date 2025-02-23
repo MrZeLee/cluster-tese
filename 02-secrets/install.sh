@@ -10,4 +10,4 @@ find secrets -name '*.yaml' -type f -printf "%f\0" |
 	xargs --null -I {} sh -c 'kubeseal -f secrets/$1 -o yaml > seal-secrets/seal-$1' -- {}
 echo "resources:" >seal-secrets/kustomization.yaml
 find seal-secrets -name '*.yaml' -type f ! -name 'kustomization.yaml' -printf "%f\0" |
-	xargs --null -I {} sh -c 'echo "- seal-$1" >> seal-secrets/kustomization.yaml' -- {}
+	xargs --null -I {} sh -c 'echo "- $1" >> seal-secrets/kustomization.yaml' -- {}
