@@ -1,0 +1,32 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: domain-certificate
+  namespace: default
+spec:
+  secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  commonName: "*.{{ .Values.cloudflare_zone }}"
+  dnsNames:
+  - "{{ .Values.cloudflare_zone }}"
+  - "*.{{ .Values.cloudflare_zone }}"
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: local-domain-certificate
+  namespace: default
+spec:
+  secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  commonName: "*.local.{{ .Values.cloudflare_zone }}"
+  dnsNames:
+  - "local.{{ .Values.cloudflare_zone }}"
+  - "*.local.{{ .Values.cloudflare_zone }}"
+

@@ -1,0 +1,4 @@
+ingress:
+  enabled: false
+tls: external
+replicas: 3

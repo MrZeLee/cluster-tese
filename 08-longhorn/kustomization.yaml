@@ -1,0 +1,2 @@
+resources:
+- longhorn-nfs-installation.yaml

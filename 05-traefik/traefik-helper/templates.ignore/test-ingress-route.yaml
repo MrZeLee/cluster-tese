@@ -1,0 +1,27 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # - match: Host(`local.{{ .Values.cloudflare_zone }}`) || ( PathPrefix(`/traefik`) && HeadersRegexp(`Referer`, `^[^/]*//[^/]*/traefik(?:/.*){0,1}$`) )
+    - match: Host(`traefik.local.{{ .Values.cloudflare_zone }}`) 
+      kind: Rule
+      middlewares:
+        - name: traefik-dashboard-basicauth
+          namespace: traefik
+        # - name: strip-traefik
+        #   namespace: traefik
+        # - name: rewrite-headers
+        #   namespace: traefik
+      services:
+        - name: api@internal
+          kind: TraefikService
+  tls:
+    secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+

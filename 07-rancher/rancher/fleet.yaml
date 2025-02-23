@@ -1,0 +1,36 @@
+defaultNamespace: cattle-system
+
+labels:
+  app: rancher
+
+helm:
+  chart: rancher
+  repo: https://releases.rancher.com/server-charts/stable
+  version: "2.8.3"  # You might want to specify a specific version instead of using "latest"
+  valuesFiles:
+    - values.yaml  # Make sure the file name matches exactly what you have
+  releaseName: rancher
+  valuesFrom:
+  - secretKeyRef:
+      name: values-secret
+      namespace: cattle-system
+      key: values.yaml
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
+# Deployment strategy can be configured if needed (for larger or more complex deployments)
+rolloutStrategy:
+  maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: traefik-helper
+

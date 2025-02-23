@@ -1,0 +1,27 @@
+---
+apiVersion: mirrors.kts.studio/v1alpha2
+kind: SecretMirror
+metadata:
+  name: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+  namespace: default
+spec:
+  source:
+    name: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+  destination:
+    namespaces:
+      - kubernetes-dashboard
+      - traefik
+
+---
+apiVersion: mirrors.kts.studio/v1alpha2
+kind: SecretMirror
+metadata:
+  name: {{ .Values.cloudflare_zone_hyphen }}-tls
+  namespace: default
+spec:
+  source:
+    name: {{ .Values.cloudflare_zone_hyphen }}-tls
+  destination:
+    namespaces:
+      - cattle-system
+      - plex

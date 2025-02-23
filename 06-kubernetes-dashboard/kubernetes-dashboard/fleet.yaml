@@ -1,0 +1,33 @@
+defaultNamespace: kubernetes-dashboard
+
+labels:
+  app: kubernetes-dashboard
+
+helm:
+  chart: kubernetes-dashboard
+  repo: https://kubernetes.github.io/dashboard
+  version: "7.3.2"  # You might want to specify a specific version instead of using "latest"
+  releaseName: kubernetes-dashboard
+
+kustomize:
+  dir: '.'
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
+# Deployment strategy can be configured if needed (for larger or more complex deployments)
+rolloutStrategy:
+  maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: traefik-helper
+
+

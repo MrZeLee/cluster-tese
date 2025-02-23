@@ -1,0 +1,13 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+    name: rewrite-headers
+    namespace: traefik
+spec:
+    plugin:
+        traefik-plugin-rewrite-headers:
+            rewrites:
+                - header: Location
+                  regex: ^(.*?)\/(.*)
+                  replacement: $1/traefik/$2
+

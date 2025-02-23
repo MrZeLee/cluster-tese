@@ -1,0 +1,27 @@
+defaultNamespace: kube-system
+#namespace: kube-system
+
+helm:
+  chart: sealed-secrets
+  repo: https://bitnami-labs.github.io/sealed-secrets
+  version: "2.15.3"  # You might want to specify a specific version instead of using "latest"
+  values:
+    fullnameOverride: sealed-secrets-controller
+  releaseName: sealed-secrets
+
+labels:
+  app: sealed-secrets
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
+# Deployment strategy can be configured if needed (for larger or more complex deployments)
+rolloutStrategy:
+  maxUnavailable: 10%
+

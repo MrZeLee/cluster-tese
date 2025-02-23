@@ -1,0 +1,36 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: rancher-tcp
+  namespace: cattle-system
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  routes:
+    - match: HostSNI(`rancher.{{ .Values.cloudflare_zone }}`)
+      services:
+        - name: rancher
+          port: 443
+  tls:
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rancher
+  namespace: cattle-system
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`rancher.{{ .Values.cloudflare_zone }}`)
+      kind: Rule
+      services:
+        - name: rancher
+          port: 443
+  tls:
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls

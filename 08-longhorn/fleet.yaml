@@ -1,0 +1,65 @@
+defaultNamespace: longhorn-system
+
+labels:
+  app: longhorn
+
+helm:
+  repo: https://charts.longhorn.io
+  chart: longhorn
+  version: 1.6.2
+  releaseName: longhorn
+
+kustomize:
+  dir: ""
+
+diff:
+  comparePatches:
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: engineimages.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: nodes.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: volumes.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: engines.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: instancemanagers.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: replicas.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+  - apiVersion: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: settings.longhorn.io
+    operations:
+    - {"op": "replace", "path": "/status"}
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: rancher-helper

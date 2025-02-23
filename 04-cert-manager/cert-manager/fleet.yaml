@@ -1,0 +1,34 @@
+defaultNamespace: cert-manager
+
+labels:
+  app: cert-manager
+
+helm:
+  chart: cert-manager
+  repo: https://charts.jetstack.io
+  version: "1.14.4"  # You might want to specify a specific version instead of using "latest"
+  valuesFiles:
+    - values.yaml  # Make sure the file name matches exactly what you have
+  releaseName: cert-manager
+
+
+# kustomize:
+#   dir: "./secrets"
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
+# Deployment strategy can be configured if needed (for larger or more complex deployments)
+rolloutStrategy:
+  maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: cert-manager-cdrs
