@@ -1,7 +1,7 @@
 #Variables
 
 ## ./templates/files/cattle-system/values-secret.yaml
-- **CLOUDFLARE_ZONE**- normally domain
+- **CLOUDFLARE_ZONE** - normally domain
 - **RANCHER_ADMIN_PASSWORD** - password for the rancher admin
 
 ## ./templates/files/cert-manager/helper-values-secret.yaml
