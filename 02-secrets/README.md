@@ -1,3 +1,29 @@
+#Variables
+
+## ./templates/files/cattle-system/values-secret.yaml
+- **CLOUDFLARE_ZONE**- normally domain
+- **RANCHER_ADMIN_PASSWORD** - password for the rancher admin
+
+## ./templates/files/cert-manager/helper-values-secret.yaml
+- **CLOUDFLARE_EMAIL** - email associated with cloudflare_domain
+- **LETS_ENCRYPT_EMAIL** - email associated with let's encrypt
+
+## ./templates/files/traefik/helper-values-secret.yaml
+- **CLOUDFLARE_ZONE** - normally domain
+- **CLOUDFLARE_ZONE_HYPHEN** - domain, but instead of . subtituted with - (I know
+there was probably a better way)
+
+## ./templates/files/traefik/values-secret.yaml
+- **LOAD_BALANCER_IP** - local ip of the load balancer
+
+## ./templates/secrets/cloudflare-token-secret.yaml
+- **CLOUDFLARE_TOKEN** - generated token in cloudflare (to automaticly setup the ip
+addresss, probably?? too much time passed since I made this)
+
+## ./templates/secrets/dashboard-secret.yaml
+- **TRAEFIK_USERS** - users and passwords of the traefik (probably better to check,
+but value coded base64, was a string from command `htpasswd -nbm user password`)
+
 # Create sealed secret
 
 ls seal-secrets | xargs -I {} rm -f seal-secrets/{}
