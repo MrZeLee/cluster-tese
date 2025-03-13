@@ -9,11 +9,11 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`grafana.local.{{ .Values.cloudflare_zone }}`)
+    - match: Host(`grafana.{{ .Values.cloudflare_zone }}`)
       kind: Rule
       services:
         - name: monitoring-grafana
           port: 80  # Check the chart values for the correct port
   tls:
-    secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
 
