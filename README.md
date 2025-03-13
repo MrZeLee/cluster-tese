@@ -20,104 +20,132 @@ various applications detailed in the sections below.
 ```
 .
 ├── 01-kube-system
-│   ├── 01-seal-secrets
-│   │   └── fleet.yaml
-│   └── 02-seal-secrets-helper
-│       ├── cattle-system
-│       │   └── fleet.yaml
-│       ├── cert-manager
-│       │   └── fleet.yaml
-│       └── traefik
-│           └── fleet.yaml
+│   ├── 01-seal-secrets
+│   │   └── fleet.yaml
+│   └── 02-seal-secrets-helper
+│       ├── cattle-system
+│       │   └── fleet.yaml
+│       ├── cert-manager
+│       │   └── fleet.yaml
+│       ├── monitoring
+│       │   └── fleet.yaml
+│       └── traefik
+│           └── fleet.yaml
 ├── 02-secrets
-│   ├── seal-secrets
-│   │   ├── kustomization.yaml
-│   │   ├── seal-cattle-system-values-secret.yaml
-│   │   ├── seal-cert-manager-helper-values-secret.yaml
-│   │   ├── seal-cloudflare-token-secret.yaml
-│   │   ├── seal-dashboard-secret.yaml
-│   │   ├── seal-traefik-helper-values-secret.yaml
-│   │   └── seal-traefik-values-secret.yaml
-│   ├── secrets
-│   │   └── .gitignore
-│   ├── templates
-│   │   ├── files
-│   │   │   ├── cattle-system
-│   │   │   │   └── values-secret.yaml
-│   │   │   ├── cert-manager
-│   │   │   │   └── helper-values-secret.yaml
-│   │   │   ├── monitoring
-│   │   │   │   └── grafana-admin-password.yaml
-│   │   │   └── traefik
-│   │   │       ├── helper-values-secret.yaml
-│   │   │       └── values-secret.yaml
-│   │   └── secrets
-│   │       └── cloudflare-token-secret.yaml
-│   ├── fleet.yaml
-│   ├── install.sh
-│   └── README.md
+│   ├── files
+│   │   ├── cattle-system
+│   │   │   └── values-secret.yaml
+│   │   ├── cert-manager
+│   │   │   └── helper-values-secret.yaml
+│   │   ├── monitoring
+│   │   │   └── values-secret.yaml
+│   │   └── traefik
+│   │       ├── helper-values-secret.yaml
+│   │       └── values-secret.yaml
+│   ├── fleet.yaml
+│   ├── install.sh
+│   ├── README.md
+│   ├── seal-secrets
+│   │   ├── kustomization.yaml
+│   │   ├── seal-cattle-system-values-secret.yaml
+│   │   ├── seal-cert-manager-helper-values-secret.yaml
+│   │   ├── seal-cloudflare-token-secret.yaml
+│   │   ├── seal-dashboard-secret.yaml
+│   │   ├── seal-monitoring-values-secret.yaml
+│   │   ├── seal-traefik-helper-values-secret.yaml
+│   │   └── seal-traefik-values-secret.yaml
+│   ├── secrets
+│   │   ├── cattle-system-values-secret.yaml
+│   │   ├── cert-manager-helper-values-secret.yaml
+│   │   ├── cloudflare-token-secret.yaml
+│   │   ├── dashboard-secret.yaml
+│   │   ├── monitoring-values-secret.yaml
+│   │   ├── traefik-helper-values-secret.yaml
+│   │   └── traefik-values-secret.yaml
+│   └── templates
+│       ├── files
+│       │   ├── cattle-system
+│       │   │   └── values-secret.yaml
+│       │   ├── cert-manager
+│       │   │   └── helper-values-secret.yaml
+│       │   ├── monitoring
+│       │   │   └── values-secret.yaml
+│       │   └── traefik
+│       │       ├── helper-values-secret.yaml
+│       │       └── values-secret.yaml
+│       └── secrets
+│           ├── cloudflare-token-secret.yaml
+│           └── dashboard-secret.yaml
 ├── 03-mirrors
-│   └── fleet.yaml
+│   └── fleet.yaml
 ├── 04-cert-manager
-│   ├── cert-manager
-│   │   ├── fleet.yaml
-│   │   └── values.yaml
-│   ├── cert-manager-crds
-│   │   ├── cert-manager.crds.yaml
-│   │   ├── fleet.yaml
-│   │   ├── kustomization.yaml
-│   │   └── README.md
-│   └── cert-manager-helper
-│       ├── Chart.yaml
-│       ├── fleet.yaml
-│       ├── templates
-│       │   ├── certificate.yaml
-│       │   ├── letsencrypt.yaml
-│       │   └── mirror-domain-tls.yaml
-│   ├── README.md
+│   ├── cert-manager
+│   │   ├── fleet.yaml
+│   │   └── values.yaml
+│   ├── cert-manager-crds
+│   │   ├── cert-manager.crds.yaml
+│   │   ├── fleet.yaml
+│   │   ├── kustomization.yaml
+│   │   └── README.md
+│   ├── cert-manager-helper
+│   │   ├── Chart.yaml
+│   │   ├── fleet.yaml
+│   │   └── templates
+│   │       ├── certificate.yaml
+│   │       ├── letsencrypt.yaml
+│   │       └── mirror-domain-tls.yaml
+│   └── README.md
 ├── 05-traefik
-│   ├── traefik
-│   │   ├── fleet.yaml
-│   │   ├── kustomization.yaml
-│   │   ├── middleware-auth.yaml
-│   │   └── values.yaml
-│   └── traefik-helper
-│       ├── Chart.yaml
-│       ├── fleet.yaml
-│       ├── templates
-│       │   └── ingress-route.yaml
-│       └── templates.ignore
-│           ├── rewrite-header-middleware.yaml
-│           ├── strip-prefix-middleware.yaml
-│           └── test-ingress-route.yaml
+│   ├── traefik
+│   │   ├── fleet.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── middleware-auth.yaml
+│   │   └── values.yaml
+│   └── traefik-helper
+│       ├── Chart.yaml
+│       ├── fleet.yaml
+│       ├── templates
+│       │   └── ingress-route.yaml
+│       └── templates.ignore
+│           ├── rewrite-header-middleware.yaml
+│           ├── strip-prefix-middleware.yaml
+│           └── test-ingress-route.yaml
 ├── 06-kubernetes-dashboard
-│   ├── kubernetes-dashboard
-│   │   ├── admin-user.yaml
-│   │   ├── cluster-role-binding.yaml
-│   │   ├── fleet.yaml
-│   │   ├── kustomization.yaml
-│   │   └── long-lived-bearer-token.yaml
-│   └── kubernetes-dashboard-helper
-│       ├── Chart.yaml
-│       ├── fleet.yaml
-│       └── templates
-│           └── ingress-route.yaml
+│   ├── kubernetes-dashboard
+│   │   ├── admin-user.yaml
+│   │   ├── cluster-role-binding.yaml
+│   │   ├── fleet.yaml
+│   │   ├── kustomization.yaml
+│   │   └── long-lived-bearer-token.yaml
+│   └── kubernetes-dashboard-helper
+│       ├── Chart.yaml
+│       ├── fleet.yaml
+│       └── templates
+│           └── ingress-route.yaml
 ├── 07-rancher
-│   ├── rancher
-│   │   ├── fleet.yaml
-│   │   └── values.yaml
-│   └── rancher-helper
-│       ├── Chart.yaml
-│       ├── fleet.yaml
-│       └── templates
-│           └── ingress-route.yaml
+│   ├── rancher
+│   │   ├── fleet.yaml
+│   │   └── values.yaml
+│   └── rancher-helper
+│       ├── Chart.yaml
+│       ├── fleet.yaml
+│       └── templates
+│           └── ingress-route.yaml
 ├── 08-longhorn
-│   ├── fleet.yaml
-│   ├── kustomization.yaml
-│   ├── longhorn-nfs-installation.yaml
-│   └── README.md
-├── codecompanion-workspace.json
-└── TODO_2025_02_01.md
+│   ├── fleet.yaml
+│   ├── kustomization.yaml
+│   ├── longhorn-nfs-installation.yaml
+│   └── README.md
+├── 09-monitoring
+│   ├── monitoring
+│   │   ├── fleet.yaml
+│   │   └── values.yaml
+│   └── monitoring-helper
+│       ├── Chart.yaml
+│       ├── fleet.yaml
+│       └── templates
+│           └── ingress-route.yaml
+└── README.md
 ```
 
 ## Components
@@ -260,11 +288,20 @@ various applications detailed in the sections below.
     utilities on the nodes.
   - `README.md`: Additional instructions.
 
-### Other Files
+### 09-monitoring
 
-- `codecompanion-workspace.json`: Configuration file for CodeCompanion.nvim,
-  defining workspace settings and file descriptions for AI-assisted development.
-- `TODO_2025_02_01.md`: A markdown file to track project tasks and due dates.
+- Deploys monitoring tools based on the Prometheus and Grafana stack.
+  - **monitoring**: Contains the core monitoring stack deployment.
+    - `fleet.yaml`: Configuration for the Fleet controller to manage the
+      monitoring deployment.
+    - `values.yaml`: Helm values for configuring the Prometheus and Grafana stack.
+  - **monitoring-helper**: Contains resources to help configure the monitoring
+    stack, such as IngressRoutes.
+    - `Chart.yaml`: Defines the chart metadata for monitoring-helper.
+    - `fleet.yaml`: Configuration for the Fleet controller to manage the
+      monitoring-helper deployment.
+    - `templates`: Contains templates for the IngressRoute resources.
+      - `ingress-route.yaml`: Template for creating an IngressRoute to access Grafana.
 
 ## Deployment
 
