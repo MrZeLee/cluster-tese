@@ -1,7 +1,7 @@
-prometheus:
-  prometheusSpec:
-    serviceMonitorSelectorNilUsesHelmValues: false
-    podMonitorSelectorNilUsesHelmValues: false
+# prometheus:
+#   prometheusSpec:
+#     serviceMonitorSelectorNilUsesHelmValues: false
+#     podMonitorSelectorNilUsesHelmValues: false
 
 grafana:
   # Information in SealSecrets
