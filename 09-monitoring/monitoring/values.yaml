@@ -15,6 +15,7 @@ grafana:
   service:
     type: ClusterIP
 
+  defaultDatasourceEnabled: false
   datasources:
     datasources.yaml:
       apiVersion: 1
