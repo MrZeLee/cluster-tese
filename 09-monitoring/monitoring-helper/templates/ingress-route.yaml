@@ -1,0 +1,19 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.local.{{ .Values.cloudflare_zone }}`)
+      kind: Rule
+      services:
+        - name: monitoring-grafana
+          port: 80  # Check the chart values for the correct port
+  tls:
+    secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls
+

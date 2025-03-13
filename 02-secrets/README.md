@@ -1,5 +1,9 @@
 #Variables
 
+## ./templates/files/monitoring/values-secret.yaml
+- **GRAFANA_ADMIN_USER** - grafana admin username
+- **GRAFANA_ADMIN_PASSWORD** - grafana admin password
+
 ## ./templates/files/cattle-system/values-secret.yaml
 - **CLOUDFLARE_ZONE** - normally domain
 - **RANCHER_ADMIN_PASSWORD** - password for the rancher admin

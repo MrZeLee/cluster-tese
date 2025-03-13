@@ -1,5 +1,6 @@
 resources:
 - seal-cloudflare-token-secret.yaml
+- seal-monitoring-values-secret.yaml
 - seal-cattle-system-values-secret.yaml
 - seal-traefik-helper-values-secret.yaml
 - seal-cert-manager-helper-values-secret.yaml

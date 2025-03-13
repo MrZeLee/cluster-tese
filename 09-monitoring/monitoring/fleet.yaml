@@ -1,0 +1,34 @@
+defaultNamespace: monitoring
+
+labels:
+  app: monitoring
+
+helm:
+  # We use the kube-prometheus-stack since it bundles Prometheus and Grafana.
+  chart: kube-prometheus-stack
+  repo: https://prometheus-community.github.io/helm-charts
+  version: "69.8.2"  # (use the appropriate version)
+  releaseName: monitoring
+  valuesFiles:
+    - values.yaml
+  valuesFrom:
+  - secretKeyRef:
+      name: values-secret
+      namespace: monitoring
+      key: values.yaml
+
+# Optional: Add namespace labels and annotations
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+paused: false
+rolloutStrategy:
+  maxUnavailable: 10%
+
+# You can use dependsOn if you need monitoring to start after your secrets are present
+dependsOn:
+  - selector:
+    matchLabels:
+      app: traefik-helper
