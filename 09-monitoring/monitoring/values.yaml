@@ -24,5 +24,5 @@ grafana:
           type: prometheus
           access: proxy
           url: http://monitoring-prometheus-server.monitoring.svc.cluster.local
-          isDefault: true
+          # isDefault: true
 
