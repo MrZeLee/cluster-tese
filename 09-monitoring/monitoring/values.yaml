@@ -2,11 +2,14 @@ prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: true
     podMonitorSelectorNilUsesHelmValues: true
+  prometheusSpec:
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
 
-prometheusOperator:
-  serviceMonitor:
-    interval: "30s"
-    scrapeTimeout: "30s"
+# prometheusOperator:
+  # serviceMonitor:
+  #   interval: "30s"
+  #   scrapeTimeout: "30s"
 
 grafana:
   # Information in SealSecrets
