@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: true
+  prometheusSpec:
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
+
+grafana:
+  # Information in SealSecrets
+  # admin : "admin"
+  # adminPassword: "adminPassword"
+
+  sidecar:
+    dashboards:
+      enabled: true
+
+    datasources:
+      enabled: true
