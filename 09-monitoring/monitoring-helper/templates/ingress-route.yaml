@@ -13,7 +13,8 @@ spec:
       kind: Rule
       services:
         - name: monitoring-grafana
-          port: 80  # Check the chart values for the correct port
+          port: 80
+          kind: Service
   tls:
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
 
