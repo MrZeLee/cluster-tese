@@ -1,7 +1,7 @@
-# prometheus:
-#   prometheusSpec:
-#     serviceMonitorSelectorNilUsesHelmValues: false
-#     podMonitorSelectorNilUsesHelmValues: false
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: true
+    podMonitorSelectorNilUsesHelmValues: true
 
 grafana:
   # Information in SealSecrets
@@ -12,17 +12,8 @@ grafana:
     dashboards:
       enabled: true
 
-  service:
-    type: ClusterIP
-
-  defaultDatasourceEnabled: false
-  # datasources:
-  #   datasources.yaml:
-  #     apiVersion: 1
-  #     datasources:
-  #       - name: Prometheus
-  #         type: prometheus
-  #         access: proxy
-  #         url: http://monitoring-prometheus-server.monitoring.svc.cluster.local
-  #         # isDefault: true
-
+    datasources:
+      enabled: true
+      url: http://monitoring-prometheus-server.monitoring.svc.cluster.local
+      timeout: 30
+      defaultDatasourceScrapeInterval: 15s
