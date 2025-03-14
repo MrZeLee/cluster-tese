@@ -27,11 +27,11 @@ helm:
   # is less that or equal to zero, we will not wait in Helm
   timeoutSeconds: 0
 
-  # valuesFrom:
-  # - secretKeyRef:
-  #     name: helper-values-secret
-  #     namespace: monitoring
-  #     key: values.yaml
+  valuesFrom:
+  - secretKeyRef:
+      name: helper-values-secret
+      namespace: traefik
+      key: values.yaml
     
 # Optional: Configuration if you need to apply specific labels or annotations to the namespace
 namespaceLabels:
