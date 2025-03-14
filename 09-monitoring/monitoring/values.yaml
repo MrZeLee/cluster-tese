@@ -16,4 +16,4 @@ grafana:
       enabled: true
       # url: http://monitoring-prometheus-server.monitoring.svc.cluster.local
       # timeout: 30
-      # defaultDatasourceScrapeInterval: 15s
+      defaultDatasourceScrapeInterval: 15s
