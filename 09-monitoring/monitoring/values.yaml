@@ -6,6 +6,7 @@ prometheus:
 prometheusOperator:
   serviceMonitor:
     interval: "30s"
+    scrapeTimeout: "30s"
 
 grafana:
   # Information in SealSecrets
