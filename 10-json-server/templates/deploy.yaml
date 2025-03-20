@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-server-arm64
+  namespace: json-server
+spec:
+  selector:
+    matchLabels:
+      app: json-server
+      arch: arm64
+  template:
+    metadata:
+      labels:
+        app: json-server
+        arch: arm64
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      initContainers:
+        - name: init-db
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data
+              if [ ! -f /data/db.json ]; then
+                echo "Copying db.json from config to PVC...";
+                cp /config/db.json /data/db.json;
+              else
+                echo "db.json already exists in PVC, skipping copy.";
+              fi
+          volumeMounts:
+            - name: db-config
+              mountPath: /config
+            - name: db-data
+              mountPath: /data
+      containers:
+        - name: json-server
+          image: backplane/json-server@sha256:95c55695c19f2420540fd7fd09da2d5847c47a0bbcb073c8d07fc2c428050153
+          args:
+            - "/data/db.json"
+            - "--watch"
+            - "--port"
+            - "80"
+            - "--host"
+            - "0.0.0.0"
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "500m"
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      volumes:
+        - name: db-config
+          configMap:
+            name: json-server-data-config
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: json-server-data-pvc
+
