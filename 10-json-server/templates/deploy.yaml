@@ -35,6 +35,8 @@ spec:
       containers:
         - name: json-server
           image: clue/json-server:latest
+          # Provide the database file and instruct json-server to watch it on port 80
+          command: ["json-server", "/data/db.json", "--watch", "--port", "80"]
           ports:
             - containerPort: 80
           volumeMounts:
