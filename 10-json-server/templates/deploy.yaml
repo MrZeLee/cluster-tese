@@ -34,9 +34,12 @@ spec:
               mountPath: /data
       containers:
         - name: json-server
-          image: clue/json-server:latest
-          # Provide the database file and instruct json-server to watch it on port 80
-          command: ["json-server", "/data/db.json", "--watch", "--port", "80"]
+          image: node:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - >
+              npm install -g json-server &&
+              json-server /data/db.json --watch --port 80
           ports:
             - containerPort: 80
           volumeMounts:
