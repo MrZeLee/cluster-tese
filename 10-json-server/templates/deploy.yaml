@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-server
+  namespace: json-server
+spec:
+  replicas: 2  # Adjust replica count as needed
+  selector:
+    matchLabels:
+      app: json-server
+  template:
+    metadata:
+      labels:
+        app: json-server
+    spec:
+      initContainers:
+        - name: init-db
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data
+              if [ ! -f /data/db.json ]; then
+                echo "Copying db.json from config to PVC...";
+                cp /config/db.json /data/db.json;
+              else
+                echo "db.json already exists in PVC, skipping copy.";
+              fi
+          volumeMounts:
+            - name: db-config
+              mountPath: /config
+            - name: db-data
+              mountPath: /data
+      containers:
+        - name: json-server
+          image: clue/json-server:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      volumes:
+        - name: db-config
+          configMap:
+            name: json-server-data-config
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: json-server-data-pvc
+
