@@ -48,6 +48,11 @@ spec:
             - "0.0.0.0"
           ports:
             - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "500m"
           volumeMounts:
             - name: db-data
               mountPath: /data
