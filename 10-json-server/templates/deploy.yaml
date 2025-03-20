@@ -4,7 +4,6 @@ metadata:
   name: json-server-arm64
   namespace: json-server
 spec:
-  replicas: 2  # Adjust as needed
   selector:
     matchLabels:
       app: json-server
