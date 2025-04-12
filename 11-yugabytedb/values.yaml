@@ -14,14 +14,14 @@ resource:
       cpu: 500m
       memory: 1Gi
     limits:
-      cpu: 1500m
+      cpu: 2000m
       memory: 2Gi
   tserver:
     requests:
       cpu: 500m
       memory: 1Gi
     limits:
-      cpu: 1500m
+      cpu: 2000m
       memory: 2Gi
 
 replicas:
