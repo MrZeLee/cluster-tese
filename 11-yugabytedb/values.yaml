@@ -1,0 +1,44 @@
+storage:
+  master:
+    count: 2
+    size: 10Gi
+    storageClass: longhorn
+  tserver:
+    count: 2
+    size: 10Gi
+    storageClass: longhorn
+
+resource:
+  master:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+  tserver:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+
+replicas:
+  master: 3
+  tserver: 3
+
+partition:
+  master: 3
+  tserver: 3
+
+# For more https://docs.yugabyte.com/latest/reference/configuration/yugabyted/#environment-variables
+authCredentials:
+  ysql:
+    user: "test"
+    password: "test"
+    database: "test"
+  ycql:
+    user: ""
+    password: ""
+    keyspace: ""

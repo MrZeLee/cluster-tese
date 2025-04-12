@@ -1,0 +1,35 @@
+defaultNamespace: yugabytedb
+
+labels:
+  app: yugabytedb
+
+helm:
+  chart: yugabyte
+  repo: https://charts.yugabyte.com
+  version: "2.25.1"   # Specify a version if needed; adjust as necessary.
+  valuesFiles:
+    - values.yaml  # This file should contain your custom overrides.
+  releaseName: yugabyte
+
+kustomize:
+  dir: ""
+
+# These labels and annotations will be applied to the namespace where CockroachDB is installed.
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Whether to pause rollout for manual intervention
+paused: false
+
+# Deployment strategy configuration (optional)
+rolloutStrategy:
+  maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+      matchLabels:
+        app: longhorn
+
+
