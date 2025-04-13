@@ -11,17 +11,17 @@ storage:
 resource:
   master:
     requests:
-      cpu: 500m
-      memory: 1Gi
+      cpu: 0.5
+      memory: 0.5Gi
     limits:
-      cpu: 2000m
+      cpu: 2
       memory: 2Gi
   tserver:
     requests:
-      cpu: 500m
-      memory: 1Gi
+      cpu: 0.5
+      memory: 0.5Gi
     limits:
-      cpu: 2000m
+      cpu: 2
       memory: 2Gi
 
 replicas:
@@ -32,13 +32,13 @@ partition:
   master: 3
   tserver: 3
 
-# For more https://docs.yugabyte.com/latest/reference/configuration/yugabyted/#environment-variables
-authCredentials:
-  ysql:
-    user: "test"
-    password: "test"
-    database: "test"
-  ycql:
-    user: ""
-    password: ""
-    keyspace: ""
+# # For more https://docs.yugabyte.com/latest/reference/configuration/yugabyted/#environment-variables
+# authCredentials:
+#   ysql:
+#     user: "test"
+#     password: "test"
+#     database: "test"
+#   ycql:
+#     user: ""
+#     password: ""
+#     keyspace: ""
