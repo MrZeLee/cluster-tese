@@ -6,7 +6,7 @@ labels:
 helm:
   chart: yugabyte
   repo: https://charts.yugabyte.com
-  version: "2.20.10"   # Specify a version if needed; adjust as necessary.
+  version: "2024.2.2"   # Specify a version if needed; adjust as necessary.
   valuesFiles:
     - values.yaml  # This file should contain your custom overrides.
   releaseName: yugabyte

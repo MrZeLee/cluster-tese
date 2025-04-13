@@ -1,6 +1,6 @@
 Image:
-  repository: "yugabytedb/yugabyte"
-  tag: 2.20.10.0-b29-aarch64
+  repository: "mrzelee/yugabyte"
+  tag: latest
   pullPolicy: IfNotPresent
   pullSecretName: ""
 
