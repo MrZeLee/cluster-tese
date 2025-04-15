@@ -63,14 +63,14 @@ providers:
 rbac:
   enabled: true
 
-experimental:
-  plugins:
-    traefik-plugin-rewrite-headers:
-      moduleName: "github.com/XciD/traefik-plugin-rewrite-headers"
-      version: "v0.0.4"
-    traefik-real-ip:
-      moduleName: "github.com/soulbalz/traefik-real-ip"
-      version: "v1.0.3"
+# experimental:
+#   plugins:
+#     traefik-plugin-rewrite-headers:
+#       moduleName: "github.com/XciD/traefik-plugin-rewrite-headers"
+#       version: "v0.0.4"
+#     traefik-real-ip:
+#       moduleName: "github.com/soulbalz/traefik-real-ip"
+#       version: "v1.0.3"
 
 service:
   enabled: true
