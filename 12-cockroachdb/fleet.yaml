@@ -10,6 +10,11 @@ helm:
   valuesFiles:
     - values.yaml  # This file should contain your custom overrides.
   releaseName: cockroachdb
+  valuesFrom:
+  - secretKeyRef:
+      name: values-secret
+      namespace: cockroachdb
+      key: values.yaml
 
 kustomize:
   dir: ""
