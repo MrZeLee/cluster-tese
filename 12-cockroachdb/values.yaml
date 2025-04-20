@@ -1,0 +1,14 @@
+statefulset:
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+storage:
+  persistentVolume:
+    size: 10Gi
+    storageClass: "longhorn"
+

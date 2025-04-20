@@ -1,0 +1,39 @@
+defaultNamespace: cockroachdb
+
+labels:
+  app: cockroachdb
+
+helm:
+  chart: cockroachdb
+  repo: https://charts.cockroachdb.com/
+  version: "16.0.6"   # Specify a version if needed; adjust as necessary.
+  valuesFiles:
+    - values.yaml  # This file should contain your custom overrides.
+  releaseName: cockroachdb
+  valuesFrom:
+  - secretKeyRef:
+      name: values-secret
+      namespace: cockroachdb
+      key: values.yaml
+
+kustomize:
+  dir: ""
+
+# These labels and annotations will be applied to the namespace where CockroachDB is installed.
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Whether to pause rollout for manual intervention
+paused: false
+
+# Deployment strategy configuration (optional)
+rolloutStrategy:
+  maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+      matchLabels:
+        app: secrets
+
