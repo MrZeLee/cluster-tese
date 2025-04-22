@@ -35,5 +35,5 @@ rolloutStrategy:
 dependsOn:
   - selector:
       matchLabels:
-        app: secrets
+        app: longhorn
 

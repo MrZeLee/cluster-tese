@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-api
+  namespace: cockroachdb
+spec:
+  selector:
+    matchLabels:
+      app: rest-api
+  template:
+    metadata:
+      labels:
+        app: rest-api
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: rest-api
+          image: mcadecio/universal-database-proxy-rest:1.0.2
+          ports:
+            - containerPort: 8010
+          resources:
+            requests:
+              cpu: "300m"
+            limits:
+              cpu: "1000m"
+          volumeMounts:
+            - name: client-certs
+              mountPath: /ca.pem
+              subPath: ca.pem
+              readOnly: true
+
+            - name: config
+              mountPath: /usr/database-proxy/config.json
+              subPath: config.json
+              readOnly: true
+
+      volumes:
+        - name: client-certs
+          secret:
+            secretName: cockroachdb-client-secret
+            items:
+              - key: ca.crt
+                path: ca.pem
+            defaultMode: 256
+
+        - name: config
+          secret:
+            secretName: config
+            items:
+              - key: values.yaml
+                path: config.json
+            defaultMode: 256
