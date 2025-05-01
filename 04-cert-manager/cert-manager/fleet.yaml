@@ -6,7 +6,7 @@ labels:
 helm:
   chart: cert-manager
   repo: https://charts.jetstack.io
-  version: "1.14.4"  # You might want to specify a specific version instead of using "latest"
+  version: "1.17.2"  # You might want to specify a specific version instead of using "latest"
   valuesFiles:
     - values.yaml  # Make sure the file name matches exactly what you have
   releaseName: cert-manager
