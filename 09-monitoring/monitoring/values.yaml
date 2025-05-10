@@ -17,3 +17,15 @@ grafana:
 
     datasources:
       enabled: true
+
+  env:
+    GF_RENDERING_SERVER_URL: http://grafana-image-renderer.monitoring.svc.cluster.local:8081/render
+    GF_RENDERING_CALLBACK_URL: http://monitoring-grafana.monitoring.svc.cluster.local:80/
+    GF_LOG_FILTERS: rendering:debug
+
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
