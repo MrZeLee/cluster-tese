@@ -6,17 +6,60 @@ const url = __ENV.DB_URL;
 const token = __ENV.TOKEN;
 
 export let options = {
-  stages: [
-    { duration: "1m", target: 50 },
-    { duration: "2m", target: 100 },
-    { duration: "2m", target: 200 },
-    { duration: "2m", target: 400 },
-    { duration: "5m", target: 800 }, // escala alto
-    { duration: "2m", target: 0 },
-  ],
+  scenarios: {
+    vus_0050: {
+      executor: "constant-vus",
+      vus: 50,
+      duration: "1m",
+      exec: "stage1"
+    },
+    vus_0100: {
+      executor: "constant-vus",
+      vus: 100,
+      duration: "2m",
+      startTime: "1m30s",
+      exec: "stage2"
+    },
+    vus_0200: {
+      executor: "constant-vus",
+      vus: 200,
+      duration: "2m",
+      startTime: "4m",
+      exec: "stage3"
+    },
+    vus_0400: {
+      executor: "constant-vus",
+      vus: 400,
+      duration: "2m",
+      startTime: "6m30s",
+      exec: "stage4"
+    },
+    vus_0800: {
+      executor: "constant-vus",
+      vus: 800,
+      duration: "5m",
+      startTime: "9m",
+      exec: "stage5"
+    },
+    vus_1200: {
+      executor: "constant-vus",
+      vus: 1200,
+      duration: "5m",
+      startTime: "14m30s",
+      exec: "stage6"
+    }
+  }
 };
 
-export default function () {
+// Reuse your existing default function per scenario
+export function stage1() { defaultTestLogic(); }
+export function stage2() { defaultTestLogic(); }
+export function stage3() { defaultTestLogic(); }
+export function stage4() { defaultTestLogic(); }
+export function stage5() { defaultTestLogic(); }
+export function stage6() { defaultTestLogic(); }
+
+export function defaultTestLogic() {
   let testIdVal = __VU * 10000 + __ITER;
   let uniqueSuffix = __VU * 1000 + __ITER;
 
