@@ -41,12 +41,19 @@ export let options = {
       startTime: "9m",
       exec: "stage5"
     },
-    vus_1200: {
+    vus_1600: {
       executor: "constant-vus",
-      vus: 1200,
+      vus: 1600,
       duration: "5m",
       startTime: "14m30s",
       exec: "stage6"
+    },
+    vus_3200: {
+      executor: "constant-vus",
+      vus: 3200,
+      duration: "5m",
+      startTime: "20m",
+      exec: "stage7"
     }
   }
 };
@@ -58,6 +65,7 @@ export function stage3() { defaultTestLogic(); }
 export function stage4() { defaultTestLogic(); }
 export function stage5() { defaultTestLogic(); }
 export function stage6() { defaultTestLogic(); }
+export function stage7() { defaultTestLogic(); }
 
 export function defaultTestLogic() {
   let testIdVal = __VU * 10000 + __ITER;
