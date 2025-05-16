@@ -1,0 +1,5 @@
+namespace: kube-system
+
+resources:
+- https://kube-vip.io/manifests/rbac.yaml
+- vip.yaml
