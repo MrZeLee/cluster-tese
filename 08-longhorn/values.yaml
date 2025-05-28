@@ -1,0 +1,3 @@
+defaultSettings:
+  nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
+  replicaAutoBalance: "least-effort"

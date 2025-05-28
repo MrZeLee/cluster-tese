@@ -8,6 +8,8 @@ helm:
   chart: longhorn
   version: 1.6.2
   releaseName: longhorn
+  valuesFiles:
+    - values.yaml
 
 kustomize:
   dir: ""
