@@ -1,11 +1,12 @@
 resources:
-- seal-cloudflare-token-secret.yaml
-- seal-cockroachdb-config.yaml
 - seal-monitoring-values-secret.yaml
-- seal-cockroachdb-values-secret.yaml
 - seal-cattle-system-values-secret.yaml
 - seal-traefik-helper-values-secret.yaml
-- seal-cert-manager-helper-values-secret.yaml
-- seal-traefik-values-secret.yaml
-- seal-dashboard-secret.yaml
+- seal-cloudflare-token-secret.yaml
 - seal-restapi-secret.yaml
+- seal-cert-manager-helper-values-secret.yaml
+- seal-cockroachdb-config.yaml
+- seal-cockroachdb-values-secret.yaml
+- seal-traefik-values-secret.yaml
+- seal-cifs_secret.yaml
+- seal-dashboard-secret.yaml
