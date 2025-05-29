@@ -2,3 +2,4 @@ defaultSettings:
   autoDeletePodWhenVolumeDetachedUnexpectedly: "true"
   nodeDownPodDeletionPolicy: "delete-both-statefulset-and-deployment-pod"
   replicaAutoBalance: "best-effort"
+  backupCompressionMethod: "none"

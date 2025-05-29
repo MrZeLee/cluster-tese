@@ -3,6 +3,7 @@ resources:
 - seal-cattle-system-values-secret.yaml
 - seal-traefik-helper-values-secret.yaml
 - seal-cloudflare-token-secret.yaml
+- seal-longhorn-values-secret.yaml
 - seal-restapi-secret.yaml
 - seal-cert-manager-helper-values-secret.yaml
 - seal-cockroachdb-config.yaml
