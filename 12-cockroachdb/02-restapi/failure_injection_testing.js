@@ -7,7 +7,7 @@ const token = __ENV.TOKEN;
 
 export let options = {
   vus: 200,
-  duration: "1h",
+  duration: "30m",
 };
 
 export default function () {
