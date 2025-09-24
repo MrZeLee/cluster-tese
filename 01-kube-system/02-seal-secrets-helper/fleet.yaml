@@ -25,6 +25,8 @@ helm:
   # is less that or equal to zero, we will not wait in Helm
   timeoutSeconds: 0
 
+  takeOwnership: false
+
 # Optional: Configuration if you need to apply specific labels or annotations to the namespace
 namespaceLabels:
   managed-by: Fleet
