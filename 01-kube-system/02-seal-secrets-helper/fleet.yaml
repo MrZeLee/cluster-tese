@@ -43,6 +43,8 @@ diff:
     - {"op": "replace", "path": "/metadata/labels"}
     - {"op": "replace", "path": "/metadata/annotations"}
     - {"op": "replace", "path": "/metadata/managedFields"}
+    - {"op": "replace", "path": "/metadata/finalizers"}
+    - {"op": "replace", "path": "/spec/finalizers"}
   - apiVersion: v1
     kind: Namespace
     name: traefik
