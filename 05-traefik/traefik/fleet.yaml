@@ -7,7 +7,7 @@ labels:
 helm:
   chart: traefik
   repo: https://helm.traefik.io/traefik
-  version: "27.0.2"  # You might want to specify a specific version instead of using "latest"
+  version: "37.1.1"  # You might want to specify a specific version instead of using "latest"
   valuesFiles:
     - values.yaml  # Make sure the file name matches exactly what you have
   releaseName: traefik

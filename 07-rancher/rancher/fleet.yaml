@@ -6,7 +6,7 @@ labels:
 helm:
   chart: rancher
   repo: https://releases.rancher.com/server-charts/stable
-  version: "2.8.3"  # You might want to specify a specific version instead of using "latest"
+  version: "2.12.1"  # You might want to specify a specific version instead of using "latest"
   valuesFiles:
     - values.yaml  # Make sure the file name matches exactly what you have
   releaseName: rancher
