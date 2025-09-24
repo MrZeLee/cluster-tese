@@ -1,6 +1,17 @@
 defaultNamespace: cattle-system
 
+labels:
+  app: seal-secrets-helper
+
 namespaceLabels:
   managed-by: Fleet
 namespaceAnnotations:
   fleet.cattle.io/managed: "true"
+
+# This bundle just ensures the namespace exists
+# The actual sealed secrets are deployed by the 02-secrets bundle
+
+dependsOn:
+  - selector:
+      matchLabels:
+        app: seal-secrets
