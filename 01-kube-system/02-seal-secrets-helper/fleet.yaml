@@ -1,3 +1,5 @@
+defaultNamespace: kube-system
+
 labels:
   app: seal-secrets-helper
 
