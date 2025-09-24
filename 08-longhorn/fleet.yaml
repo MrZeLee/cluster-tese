@@ -6,7 +6,7 @@ labels:
 helm:
   repo: https://charts.longhorn.io
   chart: longhorn
-  version: 1.6.2
+  version: 1.9.1
   releaseName: longhorn
   valuesFiles:
     - values.yaml

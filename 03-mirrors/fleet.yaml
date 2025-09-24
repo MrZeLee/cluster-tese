@@ -4,10 +4,10 @@ labels:
   app: mirrors
 
 helm:
-  chart: mirrors
-  repo: https://charts.kts.studio
-  version: "0.1.8"  # You might want to specify a specific version instead of using "latest"
-  releaseName: mirrors
+  chart: reflector
+  repo: https://emberstack.github.io/helm-charts
+  version: "9.1.31"  # You might want to specify a specific version instead of using "latest"
+  releaseName: reflector
 
 # Optional: Configuration if you need to apply specific labels or annotations to the namespace
 namespaceLabels:

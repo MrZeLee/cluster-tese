@@ -7,7 +7,7 @@ helm:
   # We use the kube-prometheus-stack since it bundles Prometheus and Grafana.
   chart: kube-prometheus-stack
   repo: https://prometheus-community.github.io/helm-charts
-  version: "69.8.2"  # (use the appropriate version)
+  version: "77.11.0"  # (use the appropriate version)
   releaseName: monitoring
   valuesFiles:
     - values.yaml

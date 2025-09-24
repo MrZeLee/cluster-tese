@@ -1,5 +1,4 @@
 defaultNamespace: cert-manager
-#namespace: traefik
 
 labels:
   app: cert-manager-helper
@@ -28,7 +27,7 @@ helm:
   timeoutSeconds: 0
 
   values:
-    enable_production: true
+    enable_production: false
 
   valuesFrom:
   - secretKeyRef:

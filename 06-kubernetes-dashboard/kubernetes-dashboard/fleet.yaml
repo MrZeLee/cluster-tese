@@ -6,7 +6,7 @@ labels:
 helm:
   chart: kubernetes-dashboard
   repo: https://kubernetes.github.io/dashboard
-  version: "7.3.2"  # You might want to specify a specific version instead of using "latest"
+  version: "7.13.0"  # You might want to specify a specific version instead of using "latest"
   releaseName: kubernetes-dashboard
 
 kustomize:
