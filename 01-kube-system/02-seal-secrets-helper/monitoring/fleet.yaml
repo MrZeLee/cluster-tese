@@ -1,7 +1,0 @@
-defaultNamespace: monitoring
-
-namespaceLabels:
-  managed-by: Fleet
-namespaceAnnotations:
-  fleet.cattle.io/managed: "true"
-
