@@ -1,5 +1,3 @@
-defaultNamespace: kube-system
-
 labels:
   app: secrets
 
