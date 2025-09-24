@@ -1,8 +1,0 @@
-# This is a multi-target Fleet configuration that creates namespace helper bundles
-# Each subdirectory (cattle-system, monitoring, traefik) will create its own bundle
-
-labels:
-  app: seal-secrets-helper
-
-# Fleet will automatically detect subdirectories with fleet.yaml files
-# and create separate bundles for each
