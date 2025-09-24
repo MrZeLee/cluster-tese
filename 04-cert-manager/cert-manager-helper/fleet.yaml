@@ -27,7 +27,7 @@ helm:
   timeoutSeconds: 0
 
   values:
-    enable_production: false
+    enable_production: true
 
   valuesFrom:
   - secretKeyRef:
