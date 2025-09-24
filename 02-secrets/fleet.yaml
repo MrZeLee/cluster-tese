@@ -21,4 +21,4 @@ rolloutStrategy:
 dependsOn:
   - selector:
     matchLabels:
-      app: seal-secrets-helper
+      app: seal-secrets
