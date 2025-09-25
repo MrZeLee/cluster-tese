@@ -4,10 +4,6 @@ namespace: traefik
 labels:
   app: traefik-prep
 
-kustomize:
-  # To use a kustomization.yaml different from the one in the root folder
-  dir: ""
-
 # Optional: Configuration if you need to apply specific labels or annotations to the namespace
 namespaceLabels:
   managed-by: Fleet
