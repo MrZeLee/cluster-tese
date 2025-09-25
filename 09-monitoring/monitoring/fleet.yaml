@@ -31,4 +31,4 @@ rolloutStrategy:
 dependsOn:
   - selector:
     matchLabels:
-      app: traefik-helper
+      app: monitoring-secrets

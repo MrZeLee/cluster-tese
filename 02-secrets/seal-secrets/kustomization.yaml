@@ -1,8 +1,4 @@
 resources:
 - seal-cifs_secret.yaml
 - seal-dashboard-secret.yaml
-- seal-monitoring-values-secret.yaml
 - seal-longhorn-system-values-secret.yaml
-- seal-cloudflare-token-secret.yaml
-- seal-grafana-rendering-token-secret.yaml
-- seal-cattle-system-values-secret.yaml
