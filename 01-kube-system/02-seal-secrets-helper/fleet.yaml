@@ -33,23 +33,20 @@ diff:
     kind: Namespace
     name: cattle-system
     operations:
-    - {"op": "replace", "path": "/metadata/labels"}
-    - {"op": "replace", "path": "/metadata/annotations"}
-    - {"op": "replace", "path": "/metadata/managedFields"}
+    - {"op": "replace", "path": "/metadata"}
+    - {"op": "replace", "path": "/spec"}
   - apiVersion: v1
     kind: Namespace
     name: monitoring
     operations:
-    - {"op": "replace", "path": "/metadata/labels"}
-    - {"op": "replace", "path": "/metadata/annotations"}
-    - {"op": "replace", "path": "/metadata/managedFields"}
+    - {"op": "replace", "path": "/metadata"}
+    - {"op": "replace", "path": "/spec"}
   - apiVersion: v1
     kind: Namespace
     name: traefik
     operations:
-    - {"op": "replace", "path": "/metadata/labels"}
-    - {"op": "replace", "path": "/metadata/annotations"}
-    - {"op": "replace", "path": "/metadata/managedFields"}
+    - {"op": "replace", "path": "/metadata"}
+    - {"op": "replace", "path": "/spec"}
 
 # Optional: Configuration if you need to apply specific labels or annotations to the namespace
 namespaceLabels:
