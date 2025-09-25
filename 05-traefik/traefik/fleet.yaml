@@ -40,4 +40,4 @@ dependsOn:
       app: cert-manager-prep
   - selector:
     matchLabels:
-      app: secrets
+      app: traefik-secrets
