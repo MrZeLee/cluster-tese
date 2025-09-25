@@ -12,7 +12,7 @@ spec:
     - match: Host(`grafana.{{ .Values.cloudflare_zone }}`)
       kind: Rule
       services:
-        - name: monitoring-grafana
+        - name: monitoring-stack-grafana
           port: 80
   tls:
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
