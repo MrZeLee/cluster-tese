@@ -20,5 +20,8 @@ rolloutStrategy:
 
 dependsOn:
   - selector:
-    matchLabels:
-      app: seal-secrets-helper
+      matchLabels:
+        app: sealed-secrets    # Only need the sealed-secrets controller
+  # Let Fleet handle namespace creation through automatic retries
+  # This allows secrets to deploy as soon as controller is ready
+  # Fleet will retry individual secret deployments as namespaces become available

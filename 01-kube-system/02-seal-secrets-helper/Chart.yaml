@@ -1,5 +1,0 @@
-apiVersion: v2
-name: seal-secrets-helper
-description: help seal secrets
-version: 0.0.0
-appVersion: 0.0.0
