@@ -21,7 +21,10 @@ rolloutStrategy:
 dependsOn:
   - selector:
       matchLabels:
-        app: sealed-secrets    # Only need the sealed-secrets controller
+        app: sealed-secrets
+  - selector:
+      matchLabels:
+        app: traefik-prep
   # Let Fleet handle namespace creation through automatic retries
   # This allows secrets to deploy as soon as controller is ready
   # Fleet will retry individual secret deployments as namespaces become available
