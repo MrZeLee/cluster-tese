@@ -10,14 +10,19 @@ find files -type f -name '*.yaml' |
 find bundles -type f -name '*.yaml' |
 	while read -r file; do
 		path_dir=$(dirname "$file")
-    bundle_dir="${path_dir#bundles/}"
+    buff_dir="${path_dir#bundles/}"
+    namespace=$(basename "$buff_dir")
+    bundle_dir=$(dirname "$buff_dir")
 		name=$(basename "$file" .yaml)
     echo $name
-    kubectl create secret generic "$name" --from-file=values.yaml="$file" --dry-run=client -o yaml >"../${bundle_dir}/secrets/${name}.yaml"
+    kubectl create secret generic "$name" --namespace="$namespace" --from-file=values.yaml="$file" --dry-run=client -o yaml >"../${bundle_dir}/secrets/${name}.yaml"
+    kubeseal -f "../${bundle_dir}/secrets/${name}.yaml" -o yaml > "../${bundle_dir}/secrets/seal-secret-${name}.yaml"
+    rm "../${bundle_dir}/secrets/${name}.yaml"
 	done
-find bundles -mindepth 1 -type d |
+find bundles -mindepth 2 -type d |
   while read -r file; do
-    bundle_dir="${file#bundles/}"
+    buff_dir="${file#bundles/}"
+    bundle_dir=$(dirname "$buff_dir")
     {
       echo "resources:"
       find "../${bundle_dir}/secrets" -name '*.yaml' -type f ! -name 'kustomization.yaml' ! -name 'fleet.yaml' -printf "- %f\n"
