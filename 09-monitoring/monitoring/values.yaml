@@ -2,7 +2,6 @@ prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: true
     podMonitorSelectorNilUsesHelmValues: true
-  prometheusSpec:
     scrapeInterval: "30s"
     evaluationInterval: "30s"
 
