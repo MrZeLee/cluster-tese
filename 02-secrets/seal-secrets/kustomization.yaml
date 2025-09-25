@@ -1,4 +1,1 @@
 resources:
-- seal-cifs_secret.yaml
-- seal-dashboard-secret.yaml
-- seal-longhorn-system-values-secret.yaml
