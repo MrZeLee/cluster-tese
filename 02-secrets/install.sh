@@ -15,7 +15,11 @@ find bundles -type f -name '*.yaml' |
     bundle_dir=$(dirname "$buff_dir")
 		name=$(basename "$file" .yaml)
     echo $name
-    kubectl create secret generic "$name" --namespace="$namespace" --from-file=values.yaml="$file" --dry-run=client -o yaml >"../${bundle_dir}/secrets/${name}.yaml"
+    if grep -q "kind: Secret" "$file"; then
+      cp "$file" "../${bundle_dir}/secrets/${name}.yaml"
+    else
+      kubectl create secret generic "$name" --namespace="$namespace" --from-file=values.yaml="$file" --dry-run=client -o yaml >"../${bundle_dir}/secrets/${name}.yaml"
+    fi
     kubeseal -f "../${bundle_dir}/secrets/${name}.yaml" -o yaml > "../${bundle_dir}/secrets/seal-secret-${name}.yaml"
     rm "../${bundle_dir}/secrets/${name}.yaml"
 	done

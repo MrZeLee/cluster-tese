@@ -3,8 +3,6 @@ resources:
 - seal-dashboard-secret.yaml
 - seal-monitoring-values-secret.yaml
 - seal-longhorn-system-values-secret.yaml
-- seal-cockroachdb-values-secret.yaml
 - seal-cloudflare-token-secret.yaml
 - seal-grafana-rendering-token-secret.yaml
-- seal-cockroachdb-config.yaml
 - seal-cattle-system-values-secret.yaml
