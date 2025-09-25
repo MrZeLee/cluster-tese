@@ -1,4 +1,5 @@
 defaultNamespace: traefik
+namespace: traefik
 
 labels:
   app: traefik-prep
