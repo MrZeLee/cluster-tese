@@ -37,4 +37,4 @@ rolloutStrategy:
 dependsOn:
   - selector:
     matchLabels:
-      app: secrets
+      app: cert-manager-helper
