@@ -8,7 +8,7 @@ helm:
   chart: kube-prometheus-stack
   repo: https://prometheus-community.github.io/helm-charts
   version: "77.11.0"  # (use the appropriate version)
-  releaseName: monitoring-stack
+  releaseName: monitoring
   valuesFiles:
     - values.yaml
   valuesFrom:
