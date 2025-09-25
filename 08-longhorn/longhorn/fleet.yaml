@@ -64,4 +64,4 @@ paused: false
 dependsOn:
   - selector:
     matchLabels:
-      app: rancher-helper
+      app: longhorn-secrets
