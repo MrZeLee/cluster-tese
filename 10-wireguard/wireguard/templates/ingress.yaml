@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteUDP
+metadata:
+  name: wireguard-udp
+  namespace: wireguard
+  annotations: 
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - wireguard
+  routes:
+  - services:
+      - name: wireguard
+        port: 51820
+        weight: 10
+
