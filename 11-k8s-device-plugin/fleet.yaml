@@ -1,0 +1,30 @@
+defaultNamespace: k8s-device-plugin
+
+labels:
+  app: k8s-device-plugin
+
+helm:
+  repo: https://nvidia.github.io/k8s-device-plugin
+  chart: nvidia-device-plugin
+  version: 0.17.4
+  releaseName: nvidia-device-plugin
+
+  values:
+    gfd:
+      enabled: true
+    runtimeClassName: nvidia
+    sharing:
+      mps:
+        resources:
+        - name: nvidia.com/gpu
+          replicas: 10
+
+# Optional: Configuration if you need to apply specific labels or annotations to the namespace
+namespaceLabels:
+  managed-by: Fleet
+namespaceAnnotations:
+  fleet.cattle.io/managed: "true"
+
+# Optional: You might want to pause the rollout to manually inspect before deployment
+paused: false
+
