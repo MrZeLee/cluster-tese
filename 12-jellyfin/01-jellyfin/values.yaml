@@ -23,7 +23,8 @@ persistence:
     storageClass: longhorn
     accessMode: ReadWriteOnce
   media:
-    enabled: false  # We'll use external PVC
+    enabled: true
+    existingClaim: jellyfin-media
 
 # Service configuration
 service:
@@ -58,13 +59,3 @@ affinity:
               values:
                 - '0'
 
-# Additional volume mounts for media
-volumeMounts:
-  - name: jellyfin-media
-    mountPath: /media
-
-# Additional volumes
-volumes:
-  - name: jellyfin-media
-    persistentVolumeClaim:
-      claimName: jellyfin-media
