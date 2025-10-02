@@ -14,4 +14,4 @@ parameters:
   dataLocality: "best-effort"
   nfsOptions: "vers=4.2,noresvport,softerr,timeo=600,retrans=5"
   migratable: "false"
-  diskSelector: "storage.type=raid"
+  diskSelector: "raid"
