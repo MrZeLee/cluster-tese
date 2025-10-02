@@ -1,0 +1,24 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jellyfin-ingress
+  namespace: media-server
+  labels:
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+  {{- with .Values.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+    - web
+  routes:
+    - match: Host(`jellyfin.{{ .Values.cloudflare_zone }}`)
+      kind: Rule
+      services:
+        - name: jellyfin
+          port: 8096
+  tls:
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls

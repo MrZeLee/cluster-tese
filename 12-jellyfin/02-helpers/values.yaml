@@ -1,0 +1,12 @@
+ingress:
+  # Specify if an ingress resource for the jellyfin server should be created or not
+  enabled: false
+
+  # The ingress class that should be used
+  ingressClassName: ""
+
+  # The url to use for the ingress reverse proxy to point at this jellyfin instance
+  url: ""
+
+  # Custom annotations to put on the ingress resource
+  annotations: {}

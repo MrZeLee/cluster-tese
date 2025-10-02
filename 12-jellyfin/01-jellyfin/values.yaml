@@ -1,0 +1,70 @@
+# Jellyfin image configuration
+image:
+  repository: docker.io/jellyfin/jellyfin
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Use NVIDIA runtime for GPU acceleration
+runtimeClassName: nvidia
+
+# Resource configuration for GPU
+resources:
+  limits:
+    nvidia.com/gpu: 1
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+# Storage configuration using Longhorn
+persistence:
+  config:
+    enabled: true
+    size: 10Gi
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+  media:
+    enabled: false  # We'll use external PVC
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8096
+
+# Disable built-in ingress (using helper chart)
+ingress:
+  enabled: false
+
+# Security context
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Node selector and tolerations for GPU nodes
+nodeSelector: {}
+
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: nvidia.com/gpu.count
+              operator: Gt
+              values:
+                - '0'
+
+# Additional volume mounts for media
+volumeMounts:
+  - name: jellyfin-media
+    mountPath: /media
+
+# Additional volumes
+volumes:
+  - name: jellyfin-media
+    persistentVolumeClaim:
+      claimName: jellyfin-media
