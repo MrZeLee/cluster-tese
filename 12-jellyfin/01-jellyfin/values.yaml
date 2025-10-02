@@ -35,11 +35,11 @@ service:
 ingress:
   enabled: false
 
-# Security context
-securityContext:
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
+# Security context - removed to allow root access for initial setup
+# securityContext:
+#   runAsUser: 1000
+#   runAsGroup: 1000
+#   fsGroup: 1000
 
 # Node selector and tolerations for GPU nodes
 nodeSelector: {}
