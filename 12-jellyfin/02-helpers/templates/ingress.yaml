@@ -6,10 +6,6 @@ metadata:
   labels:
   annotations:
     kubernetes.io/ingress.class: traefik-external
-  {{- with .Values.ingress.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-  {{- end }}
 spec:
   entryPoints:
     - websecure
