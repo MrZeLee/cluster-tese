@@ -17,4 +17,6 @@ spec:
         - name: jellyfin
           port: 8096
   tls:
+    domains:
+    - main: jellyfin.{{ .Values.cloudflare_zone }}
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
