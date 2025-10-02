@@ -30,3 +30,8 @@ namespaceAnnotations:
 
 # Optional: You might want to pause the rollout to manually inspect before deployment
 paused: false
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: jellyfin-secrets
