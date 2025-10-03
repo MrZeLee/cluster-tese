@@ -248,13 +248,35 @@ spec:
           
           # Copy required tools to shared volume for other containers
           echo "Copying tools to shared volume..."
-          mkdir -p /shared/bin
+          mkdir -p /shared/bin /shared/lib
+          
+          # Copy binaries
           cp /usr/bin/wg* /shared/bin/ 2>/dev/null || true
           cp /sbin/ip /shared/bin/ 2>/dev/null || true
           cp /sbin/iptables* /shared/bin/ 2>/dev/null || true
           cp /usr/bin/curl /shared/bin/ 2>/dev/null || true
           cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
           cp /bin/bash /shared/bin/ 2>/dev/null || true
+          
+          # Copy required libraries for bash and other tools
+          echo "Copying required libraries..."
+          cp /lib/ld-musl-*.so.1 /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libreadline.so.* /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libhistory.so.* /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libncursesw.so.* /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libcurl.so.* /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libssl.so.* /shared/lib/ 2>/dev/null || true
+          cp /usr/lib/libcrypto.so.* /shared/lib/ 2>/dev/null || true
+          cp /lib/libz.so.* /shared/lib/ 2>/dev/null || true
+          
+          # Create library symlinks
+          cd /shared/lib
+          for lib in *.so.*; do
+            if [ -f "$lib" ]; then
+              base=$(echo "$lib" | cut -d. -f1-2)
+              ln -sf "$lib" "$base" 2>/dev/null || true
+            fi
+          done
           
           echo "Setup completed successfully"
           echo "Created files in /etc/wireguard:"
@@ -295,13 +317,16 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Give other containers time to install packages first
-          echo "Waiting 10 seconds to allow other containers to install packages..."
-          sleep 10
+          # Use shared tools from init container
+          export PATH="/shared/bin:$PATH"
+          export LD_LIBRARY_PATH="/shared/lib:$LD_LIBRARY_PATH"
           
-          # Install wireguard tools locally BEFORE VPN blocks DNS
-          echo "Installing WireGuard tools before VPN starts..."
-          apk add --no-cache wireguard-tools iptables iproute2 bash
+          # Wait for tools to be available from init container
+          echo "Waiting for shared tools to be available..."
+          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /shared/bin/bash ]; do
+            sleep 2
+          done
+          echo "Shared tools available"
           
           # Wait for scripts to be available
           echo "Waiting for scripts to be available..."
@@ -407,10 +432,16 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Install required tools BEFORE VPN potentially blocks DNS
-          echo "Installing tools before VPN starts..."
-          apk add --no-cache curl jq bash
-          echo "Tools installed successfully"
+          # Use shared tools instead of installing (VPN blocks DNS)
+          export PATH="/shared/bin:$PATH"
+          export LD_LIBRARY_PATH="/shared/lib:$LD_LIBRARY_PATH"
+          
+          # Wait for tools to be available from init container
+          echo "Waiting for shared tools to be available..."
+          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ] || [ ! -f /shared/bin/bash ]; do
+            sleep 2
+          done
+          echo "Shared tools available"
           
           # Wait for scripts to be available
           echo "Waiting for scripts to be available..."
