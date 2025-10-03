@@ -37,20 +37,20 @@ spec:
           
           echo "Patching run_setup.sh to allow qBittorrent traffic..."
           # Add more permissive rules for local applications after VPN setup
-          cat >> run_setup.sh << 'EOFIPTABLES'
-          
-          # Allow qBittorrent to bind to all interfaces
-          iptables -I OUTPUT -o lo -j ACCEPT
-          iptables -I INPUT -i lo -j ACCEPT
-          iptables -I OUTPUT -d 0.0.0.0/0 -p tcp --dport 8080 -j ACCEPT
-          iptables -I INPUT -s 0.0.0.0/0 -p tcp --sport 8080 -j ACCEPT
-          
-          # Allow local network binding for applications
-          iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
-          iptables -I INPUT -s 127.0.0.0/8 -j ACCEPT
-          
-          echo "Added qBittorrent-friendly iptables rules"
-          EOFIPTABLES
+          cat >> run_setup.sh << 'EOF'
+
+# Allow qBittorrent to bind to all interfaces
+iptables -I OUTPUT -o lo -j ACCEPT
+iptables -I INPUT -i lo -j ACCEPT
+iptables -I OUTPUT -d 0.0.0.0/0 -p tcp --dport 8080 -j ACCEPT
+iptables -I INPUT -s 0.0.0.0/0 -p tcp --sport 8080 -j ACCEPT
+
+# Allow local network binding for applications
+iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
+iptables -I INPUT -s 127.0.0.0/8 -j ACCEPT
+
+echo "Added qBittorrent-friendly iptables rules"
+EOF
           
           echo "Setting up PIA WireGuard connection with Port Forwarding..."
           
