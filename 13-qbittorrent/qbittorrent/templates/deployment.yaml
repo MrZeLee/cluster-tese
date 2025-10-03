@@ -64,8 +64,24 @@ spec:
           
           echo "WireGuard configuration created successfully"
           
-          # Copy the PIA scripts to the shared volume for port forwarding maintenance
+          # Get PIA token while internet access is still available
+          echo "Getting PIA token before VPN starts..."
+          cd /tmp/manual-connections
+          export PIA_USER="${PIA_USERNAME}"
+          export PIA_PASS="${PIA_PASSWORD}"
+          ./get_token.sh
+          
+          if [ ! -f /opt/piavpn-manual/token ]; then
+            echo "ERROR: Failed to get PIA token"
+            exit 1
+          fi
+          
+          echo "PIA token obtained successfully"
+          
+          # Copy the PIA scripts and token to the shared volume for port forwarding maintenance
           cp -r /tmp/manual-connections /etc/wireguard/
+          mkdir -p /etc/wireguard/piavpn-manual
+          cp -r /opt/piavpn-manual/* /etc/wireguard/piavpn-manual/ 2>/dev/null || true
           
           # Create a startup script for the wireguard container
           cat > /etc/wireguard/start-vpn.sh <<'EOFVPN'
@@ -169,20 +185,14 @@ spec:
           
           cd /etc/wireguard/manual-connections
           
-          # Get PIA token
-          export PIA_USER="${PIA_USERNAME}"
-          export PIA_PASS="${PIA_PASSWORD}"
-          
-          echo "Getting PIA token..."
-          ./get_token.sh
-          
-          if [ ! -f /opt/piavpn-manual/token ]; then
-            echo "ERROR: Failed to get PIA token"
+          # Use pre-obtained PIA token from init container
+          if [ ! -f /etc/wireguard/piavpn-manual/token ]; then
+            echo "ERROR: PIA token not found - init container should have obtained it"
             exit 1
           fi
           
-          TOKEN=$(cat /opt/piavpn-manual/token)
-          echo "Token obtained"
+          TOKEN=$(cat /etc/wireguard/piavpn-manual/token)
+          echo "Using pre-obtained PIA token"
           
           # Get gateway IP
           GATEWAY_IP=$(cat /etc/wireguard/gateway_ip)
