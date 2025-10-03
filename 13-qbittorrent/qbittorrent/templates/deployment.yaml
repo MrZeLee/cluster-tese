@@ -71,7 +71,25 @@ spec:
           ./run_setup.sh &
           PIA_PID=$!
           
-          echo "PIA VPN setup started, monitoring for port changes..."
+          # Wait for VPN to be fully established
+          echo "Waiting for PIA VPN to be ready..."
+          while ! wg show pia > /dev/null 2>&1; do
+            echo "Waiting for VPN interface pia to be ready..."
+            sleep 5
+          done
+          echo "VPN interface ready!"
+          
+          echo "Adding BitTorrent-friendly iptables rules..."
+          # Allow BitTorrent traffic through VPN interface
+          iptables -I OUTPUT -o pia -j ACCEPT
+          iptables -I INPUT -i pia -j ACCEPT
+          
+          # Allow established connections (important for torrents)
+          iptables -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          iptables -I OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          echo "BitTorrent iptables rules added"
+          
+          echo "PIA VPN setup completed, monitoring for port changes..."
           
           # Function to update qBittorrent port
           update_qbittorrent_port() {
