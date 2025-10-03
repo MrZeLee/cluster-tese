@@ -75,6 +75,14 @@ spec:
           # Add shared tools to PATH
           export PATH="/shared/bin:$PATH"
           
+          echo "SCRIPT DEBUG: Current PATH inside script: $PATH"
+          echo "SCRIPT DEBUG: Contents of /shared/bin from script:"
+          ls -la /shared/bin/ || echo "Cannot list /shared/bin"
+          echo "SCRIPT DEBUG: Testing wg-quick from script:"
+          which wg-quick || echo "wg-quick not in PATH"
+          echo "SCRIPT DEBUG: Trying direct execution:"
+          /shared/bin/wg-quick --version || echo "Direct wg-quick failed"
+          
           echo "Starting WireGuard VPN..."
           wg-quick up wg0
           
@@ -308,6 +316,15 @@ spec:
           while [ ! -f /shared/bin/wg-quick ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
             sleep 2
           done
+          
+          echo "DEBUG: Current PATH: $PATH"
+          echo "DEBUG: Contents of /shared/bin/:"
+          ls -la /shared/bin/
+          echo "DEBUG: Contents of start-vpn.sh:"
+          cat /etc/wireguard/start-vpn.sh
+          echo "DEBUG: Testing wg-quick availability:"
+          which wg-quick || echo "wg-quick not found in PATH"
+          /shared/bin/wg-quick --help || echo "Direct execution failed"
           
           echo "Starting VPN..."
           # Start VPN
