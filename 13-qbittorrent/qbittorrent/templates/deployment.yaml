@@ -268,6 +268,7 @@ spec:
           cp /sbin/iptables* /shared/bin/ 2>/dev/null || true
           cp /usr/bin/curl /shared/bin/ 2>/dev/null || true
           cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
+          cp /bin/bash /shared/bin/ 2>/dev/null || true
           
           echo "Setup completed successfully"
           echo "Created files in /etc/wireguard:"
@@ -308,12 +309,15 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Use tools from init container
+          # Use tools from init container (including bash)
           export PATH="/shared/bin:$PATH"
+          
+          # Create symlink for bash so wg-quick shebang works
+          ln -sf /shared/bin/bash /bin/bash
           
           # Wait for tools and scripts to be available
           echo "Waiting for tools and scripts to be available..."
-          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
+          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /shared/bin/bash ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
             sleep 2
           done
           
