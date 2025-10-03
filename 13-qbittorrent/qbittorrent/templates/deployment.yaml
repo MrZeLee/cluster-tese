@@ -264,6 +264,8 @@ spec:
           echo "Setup completed successfully"
           echo "Created files in /etc/wireguard:"
           ls -la /etc/wireguard/
+          echo "Copied tools to /shared/bin:"
+          ls -la /shared/bin/
           echo "Init container finished"
         env:
         - name: PIA_USERNAME
@@ -298,19 +300,12 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Add shared tools to PATH
+          # Use tools from init container
           export PATH="/shared/bin:$PATH"
           
           # Wait for tools and scripts to be available
           echo "Waiting for tools and scripts to be available..."
-          
-          # Wait for tools
-          while [ ! -f /shared/bin/wg ]; do
-            sleep 2
-          done
-          
-          # Wait for script
-          while [ ! -f /etc/wireguard/start-vpn.sh ]; do
+          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
             sleep 2
           done
           
@@ -388,17 +383,18 @@ spec:
       
       # Port forwarding maintenance sidecar
       - name: port-forward
-        image: alpine:latest
+        image: curlimages/curl:latest
         command:
         - /bin/sh
         - -c
         - |
-          # Add shared tools to PATH
+          # Install jq (curl is already available)
+          # Use shared tools for jq
           export PATH="/shared/bin:$PATH"
           
-          # Wait for tools and scripts to be available
-          echo "Waiting for tools and scripts to be available..."
-          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ] || [ ! -f /etc/wireguard/maintain-port-forward.sh ]; do
+          # Wait for scripts and tools to be available
+          echo "Waiting for scripts and tools to be available..."
+          while [ ! -f /etc/wireguard/maintain-port-forward.sh ] || [ ! -f /shared/bin/jq ]; do
             sleep 2
           done
           
@@ -453,17 +449,17 @@ spec:
       
       # qBittorrent configuration sidecar
       - name: qbittorrent-config
-        image: alpine:latest
+        image: curlimages/curl:latest
         command:
         - /bin/sh
         - -c
         - |
-          # Add shared tools to PATH
+          # Use shared tools for jq (curl is already available)
           export PATH="/shared/bin:$PATH"
           
-          # Wait for tools to be available
+          # Wait for jq to be available
           echo "Waiting for tools to be available..."
-          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ]; do
+          while [ ! -f /shared/bin/jq ]; do
             sleep 2
           done
           
