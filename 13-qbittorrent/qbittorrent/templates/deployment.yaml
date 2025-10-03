@@ -189,7 +189,7 @@ spec:
             - -c
             - |
               # Check if WireGuard interface is up
-              wg show wg0 > /dev/null 2>&1
+              wg show pia > /dev/null 2>&1
           initialDelaySeconds: 120
           periodSeconds: 15
           timeoutSeconds: 10
@@ -201,7 +201,7 @@ spec:
             - -c
             - |
               # Check if WireGuard is running and connected
-              wg show wg0 > /dev/null 2>&1
+              wg show pia > /dev/null 2>&1
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
@@ -213,7 +213,7 @@ spec:
             - -c
             - |
               # Check if WireGuard is connected and port forwarding is working
-              wg show wg0 > /dev/null 2>&1 && [ -f /opt/piavpn-manual-port ]
+              wg show pia > /dev/null 2>&1 && [ -f /opt/piavpn-manual-port ]
           initialDelaySeconds: 60
           periodSeconds: 15
           timeoutSeconds: 10
@@ -229,6 +229,19 @@ spec:
       # qBittorrent container
       - name: qbittorrent
         image: linuxserver/qbittorrent:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for VPN to be ready before starting qBittorrent..."
+          # Wait for WireGuard interface to be up
+          while ! ip link show pia > /dev/null 2>&1; do
+            echo "Waiting for VPN interface pia..."
+            sleep 5
+          done
+          echo "VPN interface ready, starting qBittorrent..."
+          # Run the original entrypoint
+          exec /init
         ports:
         - containerPort: 8080
           name: webui
