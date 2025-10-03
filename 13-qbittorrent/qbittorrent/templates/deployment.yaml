@@ -72,6 +72,9 @@ spec:
           #!/bin/sh
           set -e
           
+          # Add shared tools to PATH
+          export PATH="/shared/bin:$PATH"
+          
           echo "Starting WireGuard VPN..."
           wg-quick up wg0
           
@@ -155,6 +158,9 @@ spec:
           cat > /etc/wireguard/maintain-port-forward.sh <<'EOFPF'
           #!/bin/sh
           set -e
+          
+          # Add shared tools to PATH
+          export PATH="/shared/bin:$PATH"
           
           echo "Waiting for VPN to be ready..."
           while [ ! -f /etc/wireguard/vpn_ready ]; do
@@ -297,24 +303,18 @@ spec:
           
           # Wait for tools and scripts to be available
           echo "Waiting for tools and scripts to be available..."
-          echo "Checking /shared/bin contents:"
-          ls -la /shared/bin/ || echo "No /shared/bin directory"
-          echo "Checking /etc/wireguard contents:"
-          ls -la /etc/wireguard/ || echo "No /etc/wireguard directory"
           
           # Wait for tools
           while [ ! -f /shared/bin/wg ]; do
-            echo "Waiting for /shared/bin/wg..."
             sleep 2
           done
           
           # Wait for script
           while [ ! -f /etc/wireguard/start-vpn.sh ]; do
-            echo "Waiting for /etc/wireguard/start-vpn.sh..."
             sleep 2
           done
           
-          echo "All prerequisites found, starting VPN..."
+          echo "Starting VPN..."
           # Start VPN
           /etc/wireguard/start-vpn.sh
         env:
