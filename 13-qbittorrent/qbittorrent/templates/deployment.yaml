@@ -292,9 +292,9 @@ spec:
           # Add shared tools to PATH
           export PATH="/shared/bin:$PATH"
           
-          # Wait for tools to be available
-          echo "Waiting for tools to be available..."
-          while [ ! -f /shared/bin/wg ]; do
+          # Wait for tools and scripts to be available
+          echo "Waiting for tools and scripts to be available..."
+          while [ ! -f /shared/bin/wg ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
             sleep 2
           done
           
@@ -379,9 +379,9 @@ spec:
           # Add shared tools to PATH
           export PATH="/shared/bin:$PATH"
           
-          # Wait for tools to be available
-          echo "Waiting for tools to be available..."
-          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ]; do
+          # Wait for tools and scripts to be available
+          echo "Waiting for tools and scripts to be available..."
+          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ] || [ ! -f /etc/wireguard/maintain-port-forward.sh ]; do
             sleep 2
           done
           
