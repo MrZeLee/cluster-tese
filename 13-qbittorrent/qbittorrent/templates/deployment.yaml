@@ -31,6 +31,10 @@ spec:
           git clone https://github.com/pia-foss/manual-connections.git
           cd manual-connections
           
+          echo "Patching port_forwarding.sh to save port to file..."
+          # Add line to save port to file after the port is displayed
+          sed -i '/echo -e Forwarded port/a echo "$port" > /opt/piavpn-manual-port' port_forwarding.sh
+          
           echo "Setting up PIA WireGuard connection with Port Forwarding..."
           
           # Run PIA setup script with environment variables
@@ -132,8 +136,8 @@ spec:
             fi
             
             # Check for port changes
-            if [ -f /opt/piavpn-manual/port ]; then
-              CURRENT_PORT=$(cat /opt/piavpn-manual/port 2>/dev/null || echo "")
+            if [ -f /opt/piavpn-manual-port ]; then
+              CURRENT_PORT=$(cat /opt/piavpn-manual-port 2>/dev/null || echo "")
               
               if [ -n "$CURRENT_PORT" ] && [ "$CURRENT_PORT" != "$LAST_PORT" ]; then
                 echo "Port changed from '$LAST_PORT' to '$CURRENT_PORT'"
@@ -209,7 +213,7 @@ spec:
             - -c
             - |
               # Check if WireGuard is connected and port forwarding is working
-              wg show wg0 > /dev/null 2>&1 && [ -f /opt/piavpn-manual/port ]
+              wg show wg0 > /dev/null 2>&1 && [ -f /opt/piavpn-manual-port ]
           initialDelaySeconds: 60
           periodSeconds: 15
           timeoutSeconds: 10
