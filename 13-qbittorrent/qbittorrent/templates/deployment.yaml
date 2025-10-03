@@ -295,6 +295,10 @@ spec:
         - /bin/sh
         - -c
         - |
+          # Give other containers time to install packages first
+          echo "Waiting 10 seconds to allow other containers to install packages..."
+          sleep 10
+          
           # Install wireguard tools locally BEFORE VPN blocks DNS
           echo "Installing WireGuard tools before VPN starts..."
           apk add --no-cache wireguard-tools iptables iproute2 bash
@@ -405,7 +409,8 @@ spec:
         - |
           # Install required tools BEFORE VPN potentially blocks DNS
           echo "Installing tools before VPN starts..."
-          apk add --no-cache curl jq
+          apk add --no-cache curl jq bash
+          echo "Tools installed successfully"
           
           # Wait for scripts to be available
           echo "Waiting for scripts to be available..."
