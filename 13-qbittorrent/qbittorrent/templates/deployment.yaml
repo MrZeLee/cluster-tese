@@ -1,0 +1,642 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      initContainers:
+      # Clone PIA manual-connections repo and set up WireGuard
+      - name: pia-setup
+        image: debian:bookworm-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          
+          echo "Installing dependencies..."
+          apt-get update
+          apt-get install -y curl jq git wireguard-tools iproute2 iptables
+          
+          echo "Cloning PIA manual-connections repository..."
+          cd /tmp
+          git clone https://github.com/pia-foss/manual-connections.git
+          cd manual-connections
+          
+          echo "Setting up PIA WireGuard connection with Port Forwarding..."
+          
+          # Run PIA setup script with environment variables
+          export PIA_USER="${PIA_USERNAME}"
+          export PIA_PASS="${PIA_PASSWORD}"
+          export VPN_PROTOCOL=wireguard
+          export DISABLE_IPV6=yes
+          export DIP_TOKEN=no
+          export AUTOCONNECT=false
+          export PIA_PF=true  # Enable port forwarding
+          export PIA_DNS=true
+          export PIA_CONNECT=false
+          export PIA_CONF_PATH=/etc/wireguard/wg0.conf
+          export MAX_LATENCY=0.05
+          
+          # If PREFERRED_REGION is set, use it; otherwise auto-select best server
+          if [ -n "${PIA_REGION}" ]; then
+            export PREFERRED_REGION="${PIA_REGION}"
+          else
+            export AUTOCONNECT=true
+          fi
+          
+          echo "Configuring PIA VPN..."
+          ./run_setup.sh
+          
+          # Verify config was created
+          if [ ! -f /etc/wireguard/wg0.conf ]; then
+            echo "ERROR: WireGuard configuration not created!"
+            exit 1
+          fi
+          
+          echo "WireGuard configuration created successfully"
+          
+          # Copy the PIA scripts to the shared volume for port forwarding maintenance
+          cp -r /tmp/manual-connections /etc/wireguard/
+          
+          # Create a startup script for the wireguard container
+          cat > /etc/wireguard/start-vpn.sh <<'EOFVPN'
+          #!/bin/bash
+          set -e
+          
+          echo "Starting WireGuard VPN..."
+          wg-quick up wg0
+          
+          echo "WireGuard VPN connected successfully"
+          wg show
+          
+          # Get the gateway IP for port forwarding
+          GATEWAY_IP=$(ip route | grep default | grep wg0 | awk '{print $3}')
+          echo "Gateway IP: $GATEWAY_IP"
+          
+          # Configure kill switch - block all non-VPN traffic
+          echo "Configuring kill switch..."
+          
+          # Get VPN DNS servers from WireGuard config
+          VPN_DNS=$(grep "^DNS" /etc/wireguard/wg0.conf | cut -d'=' -f2 | tr -d ' ' | tr ',' '\n')
+          echo "VPN DNS servers: $VPN_DNS"
+          
+          # Allow loopback
+          iptables -I OUTPUT -o lo -j ACCEPT
+          
+          # Allow local network communication (adjust to match your cluster network)
+          iptables -I OUTPUT -d 10.0.0.0/8 -j ACCEPT
+          iptables -I OUTPUT -d 172.16.0.0/12 -j ACCEPT
+          iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
+          iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
+          
+          # CRITICAL: Only allow DNS to VPN DNS servers (prevent DNS leaks)
+          # Block all DNS to non-VPN servers first
+          iptables -A OUTPUT -p udp --dport 53 -j REJECT
+          iptables -A OUTPUT -p tcp --dport 53 -j REJECT
+          
+          # Then allow DNS only to VPN DNS servers through the tunnel
+          for dns in $VPN_DNS; do
+            echo "Allowing DNS to VPN server: $dns"
+            iptables -I OUTPUT -d $dns -p udp --dport 53 -j ACCEPT
+            iptables -I OUTPUT -d $dns -p tcp --dport 53 -j ACCEPT
+          done
+          
+          # Allow established connections
+          iptables -I OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          
+          # Allow output through VPN interface
+          iptables -I OUTPUT -o wg0 -j ACCEPT
+          
+          # Block everything else (kill switch)
+          iptables -A OUTPUT -j REJECT
+          
+          echo "Kill switch configured - all non-VPN traffic blocked"
+          
+          # Store gateway IP for port forwarding script
+          echo "$GATEWAY_IP" > /etc/wireguard/gateway_ip
+          
+          
+          # Signal that VPN is ready
+          touch /etc/wireguard/vpn_ready
+          
+          # Keep container running and monitor connection
+          while true; do
+            if ! wg show wg0 > /dev/null 2>&1; then
+              echo "ERROR: WireGuard connection lost!"
+              rm -f /etc/wireguard/vpn_ready
+              exit 1
+            fi
+            sleep 30
+          done
+          EOFVPN
+          
+          chmod +x /etc/wireguard/start-vpn.sh
+          
+          # Create port forwarding maintenance script
+          cat > /etc/wireguard/maintain-port-forward.sh <<'EOFPF'
+          #!/bin/bash
+          set -e
+          
+          echo "Waiting for VPN to be ready..."
+          while [ ! -f /etc/wireguard/vpn_ready ]; do
+            sleep 2
+          done
+          
+          echo "VPN is ready, setting up port forwarding..."
+          
+          cd /etc/wireguard/manual-connections
+          
+          # Get PIA token
+          export PIA_USER="${PIA_USERNAME}"
+          export PIA_PASS="${PIA_PASSWORD}"
+          
+          echo "Getting PIA token..."
+          ./get_token.sh
+          
+          if [ ! -f /opt/piavpn-manual/token ]; then
+            echo "ERROR: Failed to get PIA token"
+            exit 1
+          fi
+          
+          TOKEN=$(cat /opt/piavpn-manual/token)
+          echo "Token obtained"
+          
+          # Get gateway IP
+          GATEWAY_IP=$(cat /etc/wireguard/gateway_ip)
+          echo "Using gateway: $GATEWAY_IP"
+          
+          # Function to get and bind port
+          get_and_bind_port() {
+            echo "Requesting port forward signature..."
+            SIGNATURE_RESPONSE=$(curl -sk "https://${GATEWAY_IP}:19999/getSignature?token=${TOKEN}")
+            
+            if [ $? -ne 0 ]; then
+              echo "ERROR: Failed to get signature"
+              return 1
+            fi
+            
+            PAYLOAD=$(echo "$SIGNATURE_RESPONSE" | jq -r '.payload')
+            SIGNATURE=$(echo "$SIGNATURE_RESPONSE" | jq -r '.signature')
+            
+            if [ -z "$PAYLOAD" ] || [ "$PAYLOAD" = "null" ]; then
+              echo "ERROR: Invalid payload received"
+              return 1
+            fi
+            
+            # Decode and extract port
+            PORT=$(echo "$PAYLOAD" | base64 -d | jq -r '.port')
+            EXPIRES_AT=$(echo "$PAYLOAD" | base64 -d | jq -r '.expires_at')
+            
+            echo "Received port: $PORT (expires: $EXPIRES_AT)"
+            
+            # Bind the port
+            BIND_RESPONSE=$(curl -sk --data-urlencode "payload=${PAYLOAD}" \
+              --data-urlencode "signature=${SIGNATURE}" \
+              "https://${GATEWAY_IP}:19999/bindPort")
+            
+            BIND_STATUS=$(echo "$BIND_RESPONSE" | jq -r '.status')
+            
+            if [ "$BIND_STATUS" = "OK" ]; then
+              echo "Port $PORT bound successfully"
+              echo "$PORT" > /shared/forwarded_port
+              return 0
+            else
+              echo "ERROR: Failed to bind port"
+              return 1
+            fi
+          }
+          
+          # Initial port forward
+          if get_and_bind_port; then
+            echo "Port forwarding established"
+          else
+            echo "WARNING: Initial port forward failed, will retry..."
+          fi
+          
+          # Maintain port forwarding by rebinding every 15 minutes
+          echo "Starting port forward maintenance loop (rebind every 15 minutes)..."
+          while true; do
+            sleep 900  # 15 minutes
+            
+            echo "Rebinding port..."
+            if ! get_and_bind_port; then
+              echo "WARNING: Port rebind failed, will retry in 15 minutes"
+            fi
+          done
+          EOFPF
+          
+          chmod +x /etc/wireguard/maintain-port-forward.sh
+          
+          echo "Setup completed successfully"
+        env:
+        - name: PIA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-username
+        - name: PIA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-password
+        - name: PIA_REGION
+          value: ""  # Leave empty for auto-select, or set to: us_east, us_west, ca_toronto, uk_london, etc.
+        volumeMounts:
+        - name: wireguard-config
+          mountPath: /etc/wireguard
+        - name: shared-data
+          mountPath: /shared
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+      
+      containers:
+      # WireGuard VPN sidecar
+      - name: wireguard
+        image: debian:bookworm-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Install runtime dependencies
+          apt-get update
+          apt-get install -y wireguard-tools iproute2 iptables procps curl jq
+          
+          # Start VPN
+          /etc/wireguard/start-vpn.sh
+        env:
+        - name: PIA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-username
+        - name: PIA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-password
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+        volumeMounts:
+        - name: wireguard-config
+          mountPath: /etc/wireguard
+        - name: lib-modules
+          mountPath: /lib/modules
+          readOnly: true
+        - name: shared-data
+          mountPath: /shared
+        startupProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if VPN is ready
+              [ -f /etc/wireguard/vpn_ready ]
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 20  # Allow 5 minutes for VPN setup
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if WireGuard is running and connected
+              wg show wg0 > /dev/null 2>&1 && [ -f /etc/wireguard/vpn_ready ]
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if VPN is ready
+              [ -f /etc/wireguard/vpn_ready ]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+      
+      # Port forwarding maintenance sidecar
+      - name: port-forward
+        image: debian:bookworm-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          apt-get update
+          apt-get install -y curl jq
+          /etc/wireguard/maintain-port-forward.sh
+        env:
+        - name: PIA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-username
+        - name: PIA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-password
+        volumeMounts:
+        - name: wireguard-config
+          mountPath: /etc/wireguard
+        - name: shared-data
+          mountPath: /shared
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if port forwarding process is running and port file exists
+              pgrep -f "maintain-port-forward.sh" > /dev/null && [ -f /shared/forwarded_port ]
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if forwarded port is available
+              [ -f /shared/forwarded_port ] && [ -s /shared/forwarded_port ]
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      # qBittorrent configuration sidecar
+      - name: qbittorrent-config
+        image: debian:bookworm-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          apt-get update
+          apt-get install -y curl jq
+          
+          echo "Waiting for qBittorrent to start..."
+          while ! curl -s http://localhost:8080 > /dev/null 2>&1; do
+            sleep 5
+          done
+          
+          echo "qBittorrent started, configuring admin password..."
+          
+          # Wait a bit for qBittorrent to fully initialize
+          sleep 10
+          
+          # Step 1: Try to login with default credentials and change password
+          echo "Attempting to set admin password..."
+          
+          # Try default credentials first
+          COOKIE=$(curl -i -s --connect-timeout 5 --data "username=admin&password=adminadmin" http://localhost:8080/api/v2/auth/login 2>/dev/null | grep -i set-cookie | cut -d' ' -f2)
+          
+          if [ ! -z "$COOKIE" ]; then
+            echo "Logged in with default credentials, setting new password..."
+            curl -s -X POST http://localhost:8080/api/v2/app/setPreferences \
+              --cookie "$COOKIE" \
+              --data "json={\"web_ui_password\":\"${QB_ADMIN_PASSWORD}\"}"
+            echo "Password updated successfully"
+          else
+            # Check if we can access without authentication (initial setup)
+            echo "Checking if authentication is disabled for initial setup..."
+            NO_AUTH_CHECK=$(curl -s --connect-timeout 5 http://localhost:8080/api/v2/app/version 2>/dev/null)
+            if [ ! -z "$NO_AUTH_CHECK" ]; then
+              echo "No authentication required - setting password..."
+              curl -s -X POST http://localhost:8080/api/v2/app/setPreferences \
+                --data "json={\"web_ui_password\":\"${QB_ADMIN_PASSWORD}\"}"
+              echo "Password set successfully"
+            else
+              echo "Cannot access qBittorrent API - will try our configured password"
+            fi
+          fi
+          
+          # Step 2: Wait for forwarded port and configure it
+          echo "Waiting for forwarded port..."
+          while [ ! -f /shared/forwarded_port ]; do
+            sleep 5
+          done
+          
+          FORWARDED_PORT=$(cat /shared/forwarded_port)
+          echo "Forwarded port detected: $FORWARDED_PORT"
+          
+          # Configure qBittorrent to use the forwarded port
+          echo "Configuring qBittorrent to use port $FORWARDED_PORT..."
+          
+          # Login with our configured password
+          COOKIE=$(curl -i -s --data "username=admin&password=${QB_ADMIN_PASSWORD}" http://localhost:8080/api/v2/auth/login | grep -i set-cookie | cut -d' ' -f2)
+          
+          if [ ! -z "$COOKIE" ]; then
+            # Set the port via API
+            curl -s -X POST http://localhost:8080/api/v2/app/setPreferences \
+              --cookie "$COOKIE" \
+              --data "json={\"listen_port\":$FORWARDED_PORT}"
+            
+            echo "qBittorrent configured successfully with port $FORWARDED_PORT"
+          else
+            echo "Failed to login to qBittorrent with configured password"
+          fi
+          
+          # Step 3: Monitor for port changes and update qBittorrent
+          LAST_PORT=$FORWARDED_PORT
+          while true; do
+            sleep 60
+            
+            if [ -f /shared/forwarded_port ]; then
+              CURRENT_PORT=$(cat /shared/forwarded_port)
+              
+              if [ "$CURRENT_PORT" != "$LAST_PORT" ]; then
+                echo "Port changed from $LAST_PORT to $CURRENT_PORT, updating qBittorrent..."
+                
+                # Login and update port
+                COOKIE=$(curl -i -s --data "username=admin&password=${QB_ADMIN_PASSWORD}" http://localhost:8080/api/v2/auth/login | grep -i set-cookie | cut -d' ' -f2)
+                
+                if [ ! -z "$COOKIE" ]; then
+                  curl -s -X POST http://localhost:8080/api/v2/app/setPreferences \
+                    --cookie "$COOKIE" \
+                    --data "json={\"listen_port\":$CURRENT_PORT}"
+                  echo "qBittorrent port updated to $CURRENT_PORT"
+                else
+                  echo "Failed to login to qBittorrent for port update"
+                fi
+                
+                LAST_PORT=$CURRENT_PORT
+              fi
+            fi
+          done
+        env:
+        - name: QB_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: qb-admin-password
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        - name: qbittorrent-config
+          mountPath: /config
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if qBittorrent config process is running and can connect to qBittorrent
+              pgrep -f "qbittorrent-config" > /dev/null && curl -s --connect-timeout 5 http://localhost:8080 > /dev/null
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if qBittorrent is accessible and configured
+              curl -s --connect-timeout 5 http://localhost:8080 > /dev/null
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      # qBittorrent container
+      - name: qbittorrent
+        image: linuxserver/qbittorrent:latest
+        ports:
+        - containerPort: 8080
+          name: webui
+          protocol: TCP
+        - containerPort: 6881
+          name: torrent-tcp
+          protocol: TCP
+        - containerPort: 6881
+          name: torrent-udp
+          protocol: UDP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/New_York"
+        - name: WEBUI_PORT
+          value: "8080"
+        volumeMounts:
+        - name: qbittorrent-config
+          mountPath: /config
+        - name: jellyfin-media-shared
+          mountPath: /downloads
+        - name: shared-data
+          mountPath: /shared
+        startupProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 12  # Allow 2 minutes for startup
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+      
+      volumes:
+      - name: wireguard-config
+        emptyDir: {}
+      - name: shared-data
+        emptyDir: {}
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+          type: Directory
+      - name: qbittorrent-config
+        persistentVolumeClaim:
+          claimName: qbittorrent-config
+      # Use the existing jellyfin media volume for downloads
+      - name: jellyfin-media-shared
+        persistentVolumeClaim:
+          claimName: jellyfin-media
+      
+      # This is critical - containers share the same network namespace
+      # qBittorrent uses the WireGuard network and DNS configuration
+      # DNS is configured to use PIA's DNS servers only
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.0.0.242  # PIA DNS servers (accessed through VPN tunnel)
+          - 10.0.0.243
+        options:
+          - name: ndots
+            value: "1"
+          - name: timeout
+            value: "2"
+          - name: attempts
+            value: "2"
+      restartPolicy: Always

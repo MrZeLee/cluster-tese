@@ -22,6 +22,6 @@ find bundles -mindepth 2 -type d |
     bundle_dir=$(dirname "$buff_dir")
     {
       echo "resources:"
-      find "../${bundle_dir}/secrets" -name '*.yaml' -type f ! -name 'kustomization.yaml' ! -name 'fleet.yaml' -printf "- %f\n"
+      find "../${bundle_dir}/secrets" -name '*.yaml' -type f ! -name 'kustomization.yaml' ! -name 'fleet.yaml' -printf "- %f\n" | sort
     } | tee "../${bundle_dir}/secrets/kustomization.yaml" > /dev/null
   done

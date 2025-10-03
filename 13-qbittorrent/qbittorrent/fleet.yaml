@@ -1,0 +1,6 @@
+defaultNamespace: media-server
+
+helm:
+  chart: ./
+  releaseName: qbittorrent
+
