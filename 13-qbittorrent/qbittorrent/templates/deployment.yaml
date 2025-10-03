@@ -72,6 +72,10 @@ spec:
           #!/bin/bash
           set -e
           
+          # Wait 30 seconds to ensure all containers have installed their packages
+          echo "Waiting 30 seconds to allow other containers to install packages..."
+          sleep 30
+          
           echo "Starting WireGuard VPN..."
           wg-quick up wg0
           
@@ -258,9 +262,25 @@ spec:
           cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
           cp /bin/bash /shared/bin/ 2>/dev/null || true
           
-          # Copy required libraries for bash and other tools
+          # Copy all required libraries using ldd to find dependencies
           echo "Copying required libraries..."
+          
+          # Copy the musl loader (essential for all binaries)
           cp /lib/ld-musl-*.so.1 /shared/lib/ 2>/dev/null || true
+          
+          # Copy libraries for each tool using ldd
+          for tool in /shared/bin/*; do
+            if [ -f "$tool" ] && [ -x "$tool" ]; then
+              echo "Finding dependencies for $(basename $tool)..."
+              ldd "$tool" 2>/dev/null | grep "=>" | awk '{print $3}' | while read lib; do
+                if [ -f "$lib" ]; then
+                  cp "$lib" /shared/lib/ 2>/dev/null || true
+                fi
+              done
+            fi
+          done
+          
+          # Copy additional common libraries that might be needed
           cp /usr/lib/libreadline.so.* /shared/lib/ 2>/dev/null || true
           cp /usr/lib/libhistory.so.* /shared/lib/ 2>/dev/null || true
           cp /usr/lib/libncursesw.so.* /shared/lib/ 2>/dev/null || true
@@ -268,12 +288,14 @@ spec:
           cp /usr/lib/libssl.so.* /shared/lib/ 2>/dev/null || true
           cp /usr/lib/libcrypto.so.* /shared/lib/ 2>/dev/null || true
           cp /lib/libz.so.* /shared/lib/ 2>/dev/null || true
+          cp /lib/libc.musl-*.so.1 /shared/lib/ 2>/dev/null || true
           
           # Create library symlinks
           cd /shared/lib
           for lib in *.so.*; do
             if [ -f "$lib" ]; then
-              base=$(echo "$lib" | cut -d. -f1-2)
+              # Create symlink without version numbers
+              base=$(echo "$lib" | sed 's/\.so\..*/\.so/')
               ln -sf "$lib" "$base" 2>/dev/null || true
             fi
           done
@@ -317,16 +339,9 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Use shared tools from init container
-          export PATH="/shared/bin:$PATH"
-          export LD_LIBRARY_PATH="/shared/lib:$LD_LIBRARY_PATH"
-          
-          # Wait for tools to be available from init container
-          echo "Waiting for shared tools to be available..."
-          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /shared/bin/bash ]; do
-            sleep 2
-          done
-          echo "Shared tools available"
+          # Install minimal required tools - iptables is essential for VPN kill switch
+          echo "Installing essential networking tools..."
+          apk add --no-cache iptables iproute2 wireguard-tools bash
           
           # Wait for scripts to be available
           echo "Waiting for scripts to be available..."
@@ -432,7 +447,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Use shared tools instead of installing (VPN blocks DNS)
+          # Use shared tools from init container
           export PATH="/shared/bin:$PATH"
           export LD_LIBRARY_PATH="/shared/lib:$LD_LIBRARY_PATH"
           
@@ -442,6 +457,12 @@ spec:
             sleep 2
           done
           echo "Shared tools available"
+          
+          # Test tools work with libraries
+          echo "Testing shared tools..."
+          /shared/bin/curl --version || echo "curl test failed"
+          /shared/bin/jq --version || echo "jq test failed"
+          /shared/bin/bash --version || echo "bash test failed"
           
           # Wait for scripts to be available
           echo "Waiting for scripts to be available..."
