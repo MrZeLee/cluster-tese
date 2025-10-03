@@ -182,9 +182,9 @@ spec:
             - /bin/sh
             - -c
             - |
-              # Check if VPN is ready
-              [ -f /etc/wireguard/vpn_ready ]
-          initialDelaySeconds: 60
+              # Check if WireGuard interface is up
+              wg show wg0 > /dev/null 2>&1
+          initialDelaySeconds: 120
           periodSeconds: 15
           timeoutSeconds: 10
           failureThreshold: 20  # Allow 5 minutes for VPN setup
@@ -195,8 +195,8 @@ spec:
             - -c
             - |
               # Check if WireGuard is running and connected
-              wg show wg0 > /dev/null 2>&1 && [ -f /etc/wireguard/vpn_ready ]
-          initialDelaySeconds: 10
+              wg show wg0 > /dev/null 2>&1
+          initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
@@ -206,11 +206,11 @@ spec:
             - /bin/sh
             - -c
             - |
-              # Check if VPN is ready
-              [ -f /etc/wireguard/vpn_ready ]
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
+              # Check if WireGuard is connected and port forwarding is working
+              wg show wg0 > /dev/null 2>&1 && [ -f /opt/piavpn-manual/port ]
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 10
           failureThreshold: 3
         resources:
           requests:
@@ -297,6 +297,9 @@ spec:
       - name: jellyfin-media-shared
         persistentVolumeClaim:
           claimName: jellyfin-media
+      
+      # Share network namespace so qBittorrent uses VPN
+      shareProcessNamespace: true
       
       # Use cluster DNS initially, VPN will override DNS via iptables rules
       dnsPolicy: ClusterFirst
