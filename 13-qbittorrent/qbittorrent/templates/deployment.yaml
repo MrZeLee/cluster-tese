@@ -69,7 +69,7 @@ spec:
           
           # Create a startup script for the wireguard container
           cat > /etc/wireguard/start-vpn.sh <<'EOFVPN'
-          #!/bin/bash
+          #!/bin/sh
           set -e
           
           echo "Starting WireGuard VPN..."
@@ -153,7 +153,7 @@ spec:
           
           # Create port forwarding maintenance script
           cat > /etc/wireguard/maintain-port-forward.sh <<'EOFPF'
-          #!/bin/bash
+          #!/bin/sh
           set -e
           
           echo "Waiting for VPN to be ready..."
@@ -256,6 +256,9 @@ spec:
           cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
           
           echo "Setup completed successfully"
+          echo "Created files in /etc/wireguard:"
+          ls -la /etc/wireguard/
+          echo "Init container finished"
         env:
         - name: PIA_USERNAME
           valueFrom:
@@ -294,10 +297,24 @@ spec:
           
           # Wait for tools and scripts to be available
           echo "Waiting for tools and scripts to be available..."
-          while [ ! -f /shared/bin/wg ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
+          echo "Checking /shared/bin contents:"
+          ls -la /shared/bin/ || echo "No /shared/bin directory"
+          echo "Checking /etc/wireguard contents:"
+          ls -la /etc/wireguard/ || echo "No /etc/wireguard directory"
+          
+          # Wait for tools
+          while [ ! -f /shared/bin/wg ]; do
+            echo "Waiting for /shared/bin/wg..."
             sleep 2
           done
           
+          # Wait for script
+          while [ ! -f /etc/wireguard/start-vpn.sh ]; do
+            echo "Waiting for /etc/wireguard/start-vpn.sh..."
+            sleep 2
+          done
+          
+          echo "All prerequisites found, starting VPN..."
           # Start VPN
           /etc/wireguard/start-vpn.sh
         env:
