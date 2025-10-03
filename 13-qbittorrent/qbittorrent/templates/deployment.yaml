@@ -140,6 +140,8 @@ spec:
                 update_qbittorrent_port "$CURRENT_PORT"
                 LAST_PORT="$CURRENT_PORT"
               fi
+            else
+              echo "No /opt/piavpn-manual-port found!"
             fi
             
             sleep 30
