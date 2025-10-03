@@ -16,16 +16,15 @@ spec:
       initContainers:
       # Clone PIA manual-connections repo and set up WireGuard
       - name: pia-setup
-        image: debian:bookworm-slim
+        image: alpine:latest
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
           set -e
           
           echo "Installing dependencies..."
-          apt-get update
-          apt-get install -y curl jq git wireguard-tools iproute2 iptables
+          apk add --no-cache curl jq git bash wireguard-tools iptables iproute2
           
           echo "Cloning PIA manual-connections repository..."
           cd /tmp
@@ -99,20 +98,30 @@ spec:
           iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
           iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
           
-          # CRITICAL: Only allow DNS to VPN DNS servers (prevent DNS leaks)
-          # Block all DNS to non-VPN servers first
+          # Configure DNS through VPN (prevent DNS leaks)
+          # Get current DNS from resolv.conf before blocking
+          ORIGINAL_DNS=$(grep "nameserver" /etc/resolv.conf | awk '{print $2}' | head -1)
+          echo "Original DNS: $ORIGINAL_DNS"
+          
+          # Allow established DNS connections to finish
+          iptables -I OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          
+          # Block all new DNS to non-VPN servers
           iptables -A OUTPUT -p udp --dport 53 -j REJECT
           iptables -A OUTPUT -p tcp --dport 53 -j REJECT
           
-          # Then allow DNS only to VPN DNS servers through the tunnel
+          # Allow DNS only to VPN DNS servers through the tunnel
           for dns in $VPN_DNS; do
-            echo "Allowing DNS to VPN server: $dns"
+            echo "Allowing DNS to VPN server: $dns through tunnel"
             iptables -I OUTPUT -d $dns -p udp --dport 53 -j ACCEPT
             iptables -I OUTPUT -d $dns -p tcp --dport 53 -j ACCEPT
           done
           
-          # Allow established connections
-          iptables -I OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          # Update resolv.conf to use VPN DNS
+          echo "# VPN DNS configuration" > /etc/resolv.conf
+          for dns in $VPN_DNS; do
+            echo "nameserver $dns" >> /etc/resolv.conf
+          done
           
           # Allow output through VPN interface
           iptables -I OUTPUT -o wg0 -j ACCEPT
@@ -624,19 +633,6 @@ spec:
         persistentVolumeClaim:
           claimName: jellyfin-media
       
-      # This is critical - containers share the same network namespace
-      # qBittorrent uses the WireGuard network and DNS configuration
-      # DNS is configured to use PIA's DNS servers only
-      dnsPolicy: None
-      dnsConfig:
-        nameservers:
-          - 10.0.0.242  # PIA DNS servers (accessed through VPN tunnel)
-          - 10.0.0.243
-        options:
-          - name: ndots
-            value: "1"
-          - name: timeout
-            value: "2"
-          - name: attempts
-            value: "2"
+      # Use cluster DNS initially, VPN will override DNS via iptables rules
+      dnsPolicy: ClusterFirst
       restartPolicy: Always
