@@ -298,8 +298,7 @@ spec:
         persistentVolumeClaim:
           claimName: jellyfin-media
       
-      # Share network namespace so qBittorrent uses VPN
-      shareProcessNamespace: true
+      # Containers in same pod automatically share network namespace
       
       # Use cluster DNS initially, VPN will override DNS via iptables rules
       dnsPolicy: ClusterFirst
