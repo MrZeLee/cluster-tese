@@ -69,19 +69,8 @@ spec:
           
           # Create a startup script for the wireguard container
           cat > /etc/wireguard/start-vpn.sh <<'EOFVPN'
-          #!/bin/sh
+          #!/bin/bash
           set -e
-          
-          # Add shared tools to PATH
-          export PATH="/shared/bin:$PATH"
-          
-          echo "SCRIPT DEBUG: Current PATH inside script: $PATH"
-          echo "SCRIPT DEBUG: Contents of /shared/bin from script:"
-          ls -la /shared/bin/ || echo "Cannot list /shared/bin"
-          echo "SCRIPT DEBUG: Testing wg-quick from script:"
-          which wg-quick || echo "wg-quick not in PATH"
-          echo "SCRIPT DEBUG: Trying direct execution:"
-          /shared/bin/wg-quick --version || echo "Direct wg-quick failed"
           
           echo "Starting WireGuard VPN..."
           wg-quick up wg0
@@ -166,9 +155,6 @@ spec:
           cat > /etc/wireguard/maintain-port-forward.sh <<'EOFPF'
           #!/bin/sh
           set -e
-          
-          # Add shared tools to PATH
-          export PATH="/shared/bin:$PATH"
           
           echo "Waiting for VPN to be ready..."
           while [ ! -f /etc/wireguard/vpn_ready ]; do
@@ -309,15 +295,13 @@ spec:
         - /bin/sh
         - -c
         - |
-          # Use tools from init container (including bash)
-          export PATH="/shared/bin:$PATH"
+          # Install wireguard tools locally BEFORE VPN blocks DNS
+          echo "Installing WireGuard tools before VPN starts..."
+          apk add --no-cache wireguard-tools iptables iproute2 bash
           
-          # Create symlink for bash so wg-quick shebang works
-          ln -sf /shared/bin/bash /bin/bash
-          
-          # Wait for tools and scripts to be available
-          echo "Waiting for tools and scripts to be available..."
-          while [ ! -f /shared/bin/wg-quick ] || [ ! -f /shared/bin/bash ] || [ ! -f /etc/wireguard/start-vpn.sh ]; do
+          # Wait for scripts to be available
+          echo "Waiting for scripts to be available..."
+          while [ ! -f /etc/wireguard/start-vpn.sh ]; do
             sleep 2
           done
           
@@ -414,18 +398,18 @@ spec:
       
       # Port forwarding maintenance sidecar
       - name: port-forward
-        image: curlimages/curl:latest
+        image: alpine:latest
         command:
         - /bin/sh
         - -c
         - |
-          # Install jq (curl is already available)
-          # Use shared tools for jq
-          export PATH="/shared/bin:$PATH"
+          # Install required tools BEFORE VPN potentially blocks DNS
+          echo "Installing tools before VPN starts..."
+          apk add --no-cache curl jq
           
-          # Wait for scripts and tools to be available
-          echo "Waiting for scripts and tools to be available..."
-          while [ ! -f /etc/wireguard/maintain-port-forward.sh ] || [ ! -f /shared/bin/jq ]; do
+          # Wait for scripts to be available
+          echo "Waiting for scripts to be available..."
+          while [ ! -f /etc/wireguard/maintain-port-forward.sh ]; do
             sleep 2
           done
           
