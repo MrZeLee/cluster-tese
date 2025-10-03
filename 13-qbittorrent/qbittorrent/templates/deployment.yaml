@@ -324,6 +324,16 @@ spec:
           cat /etc/wireguard/start-vpn.sh
           echo "DEBUG: Testing wg-quick availability:"
           which wg-quick || echo "wg-quick not found in PATH"
+          echo "DEBUG: File info for wg-quick:"
+          file /shared/bin/wg-quick || echo "Cannot determine file type"
+          echo "DEBUG: First few lines of wg-quick:"
+          head -5 /shared/bin/wg-quick || echo "Cannot read wg-quick"
+          echo "DEBUG: Testing if it's a script:"
+          if [ -x /shared/bin/wg-quick ]; then
+            echo "File is executable"
+          else
+            echo "File is not executable"
+          fi
           /shared/bin/wg-quick --help || echo "Direct execution failed"
           
           echo "Starting VPN..."
