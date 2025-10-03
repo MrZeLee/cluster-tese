@@ -246,6 +246,15 @@ spec:
           
           chmod +x /etc/wireguard/maintain-port-forward.sh
           
+          # Copy required tools to shared volume for other containers
+          echo "Copying tools to shared volume..."
+          mkdir -p /shared/bin
+          cp /usr/bin/wg* /shared/bin/ 2>/dev/null || true
+          cp /sbin/ip /shared/bin/ 2>/dev/null || true
+          cp /sbin/iptables* /shared/bin/ 2>/dev/null || true
+          cp /usr/bin/curl /shared/bin/ 2>/dev/null || true
+          cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
+          
           echo "Setup completed successfully"
         env:
         - name: PIA_USERNAME
@@ -275,14 +284,19 @@ spec:
       containers:
       # WireGuard VPN sidecar
       - name: wireguard
-        image: debian:bookworm-slim
+        image: alpine:latest
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
-          # Install runtime dependencies
-          apt-get update
-          apt-get install -y wireguard-tools iproute2 iptables procps curl jq
+          # Add shared tools to PATH
+          export PATH="/shared/bin:$PATH"
+          
+          # Wait for tools to be available
+          echo "Waiting for tools to be available..."
+          while [ ! -f /shared/bin/wg ]; do
+            sleep 2
+          done
           
           # Start VPN
           /etc/wireguard/start-vpn.sh
@@ -314,7 +328,7 @@ spec:
         startupProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if VPN is ready
@@ -326,7 +340,7 @@ spec:
         livenessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if WireGuard is running and connected
@@ -338,7 +352,7 @@ spec:
         readinessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if VPN is ready
@@ -357,13 +371,20 @@ spec:
       
       # Port forwarding maintenance sidecar
       - name: port-forward
-        image: debian:bookworm-slim
+        image: alpine:latest
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
-          apt-get update
-          apt-get install -y curl jq
+          # Add shared tools to PATH
+          export PATH="/shared/bin:$PATH"
+          
+          # Wait for tools to be available
+          echo "Waiting for tools to be available..."
+          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ]; do
+            sleep 2
+          done
+          
           /etc/wireguard/maintain-port-forward.sh
         env:
         - name: PIA_USERNAME
@@ -384,7 +405,7 @@ spec:
         livenessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if port forwarding process is running and port file exists
@@ -396,7 +417,7 @@ spec:
         readinessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if forwarded port is available
@@ -415,13 +436,19 @@ spec:
       
       # qBittorrent configuration sidecar
       - name: qbittorrent-config
-        image: debian:bookworm-slim
+        image: alpine:latest
         command:
-        - /bin/bash
+        - /bin/sh
         - -c
         - |
-          apt-get update
-          apt-get install -y curl jq
+          # Add shared tools to PATH
+          export PATH="/shared/bin:$PATH"
+          
+          # Wait for tools to be available
+          echo "Waiting for tools to be available..."
+          while [ ! -f /shared/bin/curl ] || [ ! -f /shared/bin/jq ]; do
+            sleep 2
+          done
           
           echo "Waiting for qBittorrent to start..."
           while ! curl -s http://localhost:8080 > /dev/null 2>&1; do
@@ -526,7 +553,7 @@ spec:
         livenessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if qBittorrent config process is running and can connect to qBittorrent
@@ -538,7 +565,7 @@ spec:
         readinessProbe:
           exec:
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               # Check if qBittorrent is accessible and configured
