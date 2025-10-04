@@ -79,15 +79,31 @@ spec:
           done
           echo "VPN interface ready!"
           
-          echo "Adding BitTorrent-friendly iptables rules..."
-          # Allow BitTorrent traffic through VPN interface
-          iptables -I OUTPUT -o pia -j ACCEPT
-          iptables -I INPUT -i pia -j ACCEPT
+          echo "Setting up secure iptables rules..."
           
-          # Allow established connections (important for torrents)
-          iptables -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-          iptables -I OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-          echo "BitTorrent iptables rules added"
+          # Flush existing rules and set default policies
+          iptables -F OUTPUT
+          iptables -F INPUT
+          iptables -P OUTPUT DROP
+          iptables -P INPUT DROP
+          
+          # Allow loopback (essential for local communication)
+          iptables -A OUTPUT -o lo -j ACCEPT
+          iptables -A INPUT -i lo -j ACCEPT
+          
+          # Allow qBittorrent web UI ONLY on eth0 (cluster access)
+          iptables -A OUTPUT -o eth0 -p tcp --sport 8080 -j ACCEPT
+          iptables -A INPUT -i eth0 -p tcp --dport 8080 -j ACCEPT
+          
+          # Allow ALL other traffic ONLY through VPN interface
+          iptables -A OUTPUT -o pia -j ACCEPT
+          iptables -A INPUT -i pia -j ACCEPT
+          
+          # Allow established/related connections
+          iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+          
+          echo "Secure iptables rules applied - web UI on eth0, torrents through VPN only"
           
           echo "PIA VPN setup completed, monitoring for port changes..."
           
@@ -111,18 +127,6 @@ spec:
             if [ $attempt -eq $max_attempts ]; then
               echo "ERROR: qBittorrent not accessible after $max_attempts attempts"
               return 1
-            fi
-            
-            # Try to set admin password first if needed
-            local cookie
-            cookie=$(curl -i -s --connect-timeout 5 --data "username=admin&password=adminadmin" http://localhost:8080/api/v2/auth/login 2>/dev/null | grep -i set-cookie | cut -d' ' -f2)
-            
-            if [ -n "$cookie" ]; then
-              echo "Setting admin password..."
-              curl -s -X POST http://localhost:8080/api/v2/app/setPreferences \
-                --cookie "$cookie" \
-                --data "json={\"web_ui_password\":\"${QB_ADMIN_PASSWORD}\"}" \
-                --connect-timeout 5
             fi
             
             # Login with configured password and set the port
