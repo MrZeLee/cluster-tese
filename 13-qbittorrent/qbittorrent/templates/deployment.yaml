@@ -200,7 +200,7 @@ spec:
             - |
               # Check if WireGuard is connected and port forwarding is working
               wg show pia > /dev/null 2>&1 && [ -f /opt/piavpn-manual-port ]
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
           periodSeconds: 15
           timeoutSeconds: 10
           failureThreshold: 3
@@ -239,8 +239,70 @@ spec:
             echo "No existing port found, using default: $FORWARDED_PORT"
           fi
           
-          # Create qBittorrent.conf that binds only to VPN interface using printf to avoid YAML issues
-          printf '[Application]\nFileLogger\\Age=1\nFileLogger\\AgeType=1\nFileLogger\\Backup=true\nFileLogger\\DeleteOld=true\nFileLogger\\Enabled=false\nFileLogger\\MaxSizeBytes=66560\nFileLogger\\Path=/config/qBittorrent/logs\n\n[AutoRun]\nenabled=false\nprogram=\n\n[BitTorrent]\nSession\\AddTorrentStopped=false\nSession\\AnonymousModeEnabled=false\nSession\\DefaultSavePath=/downloads/\nSession\\ExcludedFileNames=\nSession\\Interface=pia\nSession\\InterfaceName=pia\nSession\\Port=%s\nSession\\QueueingSystemEnabled=true\nSession\\ReannounceWhenAddressChanged=true\nSession\\SSL\\Port=%s\nSession\\ShareLimitAction=Stop\nSession\\TempPath=/downloads/incomplete/\nSession\\TempPathEnabled=true\n\n[Core]\nAutoDeleteAddedTorrentFile=Never\n\n[LegalNotice]\nAccepted=true\n\n[Meta]\nMigrationVersion=8\n\n[Network]\nPortForwardingEnabled=false\nProxy\\HostnameLookupEnabled=false\nProxy\\Profiles\\BitTorrent=true\nProxy\\Profiles\\Misc=true\nProxy\\Profiles\\RSS=true\n\n[Preferences]\nConnection\\PortRangeMin=6881\nConnection\\UPnP=false\nDownloads\\SavePath=/downloads/\nDownloads\\TempPath=/downloads/incomplete/\nGeneral\\Locale=en\nGeneral\\StatusbarExternalIPDisplayed=true\nMailNotification\\req_auth=true\nWebUI\\Address=*\nWebUI\\AuthSubnetWhitelist=@Invalid()\nWebUI\\LocalHostAuth=false\nWebUI\\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"\nWebUI\\ServerDomains=*\n\n[RSS]\nAutoDownloader\\DownloadRepacks=true\nAutoDownloader\\SmartEpisodeFilter=s(\\\\d+)e(\\\\d+), (\\\\d+)x(\\\\d+), "(\\\\d{4}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{1,2})", "(\\\\d{1,2}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{4})"\n' "$FORWARDED_PORT" "$FORWARDED_PORT" > /config/qBittorrent/qBittorrent.conf
+          # Create qBittorrent.conf that binds only to VPN interface
+          cat > /config/qBittorrent/qBittorrent.conf << EOF
+[Application]
+FileLogger\\Age=1
+FileLogger\\AgeType=1
+FileLogger\\Backup=true
+FileLogger\\DeleteOld=true
+FileLogger\\Enabled=false
+FileLogger\\MaxSizeBytes=66560
+FileLogger\\Path=/config/qBittorrent/logs
+
+[AutoRun]
+enabled=false
+program=
+
+[BitTorrent]
+Session\\AddTorrentStopped=false
+Session\\AnonymousModeEnabled=false
+Session\\DefaultSavePath=/downloads/
+Session\\ExcludedFileNames=
+Session\\Interface=pia
+Session\\InterfaceName=pia
+Session\\Port=$FORWARDED_PORT
+Session\\QueueingSystemEnabled=true
+Session\\ReannounceWhenAddressChanged=true
+Session\\SSL\\Port=$FORWARDED_PORT
+Session\\ShareLimitAction=Stop
+Session\\TempPath=/downloads/incomplete/
+Session\\TempPathEnabled=true
+
+[Core]
+AutoDeleteAddedTorrentFile=Never
+
+[LegalNotice]
+Accepted=true
+
+[Meta]
+MigrationVersion=8
+
+[Network]
+PortForwardingEnabled=false
+Proxy\\HostnameLookupEnabled=false
+Proxy\\Profiles\\BitTorrent=true
+Proxy\\Profiles\\Misc=true
+Proxy\\Profiles\\RSS=true
+
+[Preferences]
+Connection\\PortRangeMin=6881
+Connection\\UPnP=false
+Downloads\\SavePath=/downloads/
+Downloads\\TempPath=/downloads/incomplete/
+General\\Locale=en
+General\\StatusbarExternalIPDisplayed=true
+MailNotification\\req_auth=true
+WebUI\\Address=*
+WebUI\\AuthSubnetWhitelist=@Invalid()
+WebUI\\LocalHostAuth=false
+WebUI\\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"
+WebUI\\ServerDomains=*
+
+[RSS]
+AutoDownloader\\DownloadRepacks=true
+AutoDownloader\\SmartEpisodeFilter=s(\\\\d+)e(\\\\d+), (\\\\d+)x(\\\\d+), "(\\\\d{4}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{1,2})", "(\\\\d{1,2}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{4})"
+EOF
           
           echo "qBittorrent config created - VPN interface binding enforced"
           echo "VPN and config ready, starting qBittorrent..."
