@@ -13,6 +13,11 @@ spec:
       labels:
         app: qbittorrent
     spec:
+      sysctls:
+      - name: net.ipv4.conf.all.src_valid_mark
+        value: "1"
+      - name: net.ipv6.conf.all.disable_ipv6
+        value: "1"
       containers:
       # WireGuard VPN sidecar with integrated PIA setup
       - name: wireguard
@@ -160,11 +165,6 @@ spec:
             - NET_ADMIN
             - SYS_MODULE
           privileged: true
-        sysctls:
-        - name: net.ipv4.conf.all.src_valid_mark
-          value: "1"
-        - name: net.ipv6.conf.all.disable_ipv6
-          value: "1"
         volumeMounts:
         - name: shared-data
           mountPath: /shared
