@@ -298,6 +298,59 @@ spec:
             memory: "2Gi"
             cpu: "2000m"
       
+      # Sonarr container
+      - name: sonarr
+        image: linuxserver/sonarr:latest
+        ports:
+        - containerPort: 8989
+          name: webui
+          protocol: TCP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/New_York"
+        - name: UMASK
+          value: "002"
+        volumeMounts:
+        - name: sonarr-config
+          mountPath: /config
+        - name: jellyfin-media-shared
+          mountPath: /data
+        startupProbe:
+          httpGet:
+            path: /
+            port: 8989
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 12  # Allow 2 minutes for startup
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8989
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8989
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+      
       volumes:
       - name: shared-data
         emptyDir: {}
@@ -308,6 +361,9 @@ spec:
       - name: jellyfin-media-shared
         persistentVolumeClaim:
           claimName: jellyfin-media
+      - name: sonarr-config
+        persistentVolumeClaim:
+          claimName: sonarr-config
       
       # Containers in same pod automatically share network namespace
       
