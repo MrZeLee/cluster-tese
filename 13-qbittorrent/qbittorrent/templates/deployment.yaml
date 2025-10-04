@@ -54,40 +54,8 @@ spec:
             export PREFERRED_REGION="${PIA_REGION}"
           fi
           
-          # Copy jq for qbittorrent-config container before VPN starts
-          echo "Copying jq for qbittorrent-config container..."
-          mkdir -p /shared/bin /shared/lib
-          cp /usr/bin/jq /shared/bin/ 2>/dev/null || true
-          cp /lib/ld-musl-*.so.1 /shared/lib/ 2>/dev/null || true
-          if [ -f /shared/bin/jq ]; then
-            ldd /shared/bin/jq 2>/dev/null | grep "=>" | awk '{print $3}' | while read lib; do
-              if [ -f "$lib" ]; then
-                cp "$lib" /shared/lib/ 2>/dev/null || true
-              fi
-            done
-          fi
-          
-          # Create config directory with proper ownership
-          mkdir -p /shared/qbittorrent-config/qBittorrent
-          
-          echo "Creating qBittorrent config to bind only to VPN interface..."
-          
-          # Create qBittorrent.conf that binds only to VPN interface using printf to avoid YAML issues
-          printf '[Application]\nFileLogger\\Age=1\nFileLogger\\AgeType=1\nFileLogger\\Backup=true\nFileLogger\\DeleteOld=true\nFileLogger\\Enabled=false\nFileLogger\\MaxSizeBytes=66560\nFileLogger\\Path=/config/qBittorrent/logs\n\n[AutoRun]\nenabled=false\nprogram=\n\n[BitTorrent]\nSession\\AddTorrentStopped=false\nSession\\AnonymousModeEnabled=true\nSession\\DefaultSavePath=/downloads/\nSession\\ExcludedFileNames=\nSession\\Interface=pia\nSession\\InterfaceName=pia\nSession\\Port=FORWARDED_PORT_PLACEHOLDER\nSession\\QueueingSystemEnabled=true\nSession\\ReannounceWhenAddressChanged=true\nSession\\SSL\\Port=FORWARDED_PORT_PLACEHOLDER\nSession\\ShareLimitAction=Stop\nSession\\TempPath=/downloads/incomplete/\nSession\\TempPathEnabled=true\n\n[Core]\nAutoDeleteAddedTorrentFile=Never\n\n[LegalNotice]\nAccepted=true\n\n[Meta]\nMigrationVersion=8\n\n[Network]\nPortForwardingEnabled=false\nProxy\\HostnameLookupEnabled=false\nProxy\\Profiles\\BitTorrent=true\nProxy\\Profiles\\Misc=true\nProxy\\Profiles\\RSS=true\n\n[Preferences]\nConnection\\PortRangeMin=6881\nConnection\\UPnP=false\nDownloads\\SavePath=/downloads/\nDownloads\\TempPath=/downloads/incomplete/\nGeneral\\Locale=en\nGeneral\\StatusbarExternalIPDisplayed=true\nMailNotification\\req_auth=true\nWebUI\\Address=*\nWebUI\\AuthSubnetWhitelist=@Invalid()\nWebUI\\LocalHostAuth=false\nWebUI\\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"\nWebUI\\ServerDomains=*\n\n[RSS]\nAutoDownloader\\DownloadRepacks=true\nAutoDownloader\\SmartEpisodeFilter=s(\\\\d+)e(\\\\d+), (\\\\d+)x(\\\\d+), "(\\\\d{4}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{1,2})", "(\\\\d{1,2}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{4})"\n' > /shared/qbittorrent-config/qBittorrent/qBittorrent.conf
-
-          # Get current forwarded port (will be updated later by monitoring)
-          FORWARDED_PORT="6881"  # Default, will be updated when port forwarding is ready
-          if [ -f /opt/piavpn-manual-port ]; then
-            FORWARDED_PORT=$(cat /opt/piavpn-manual-port)
-          fi
-          
-          # Replace placeholder with actual port
-          sed -i "s/FORWARDED_PORT_PLACEHOLDER/$FORWARDED_PORT/g" /shared/qbittorrent-config/qBittorrent/qBittorrent.conf
-          
-          # Set proper ownership (1000:1000 for PUID/PGID)
-          chown -R 1000:1000 /shared/qbittorrent-config
-          
-          echo "qBittorrent config created - VPN interface binding enforced"
+          # Create shared directory structure
+          mkdir -p /shared
           
           echo "Starting PIA VPN with run_setup.sh..."
           ./run_setup.sh &
@@ -198,11 +166,6 @@ spec:
         - name: net.ipv6.conf.all.disable_ipv6
           value: "1"
         volumeMounts:
-        - name: wireguard-config
-          mountPath: /etc/wireguard
-        - name: lib-modules
-          mountPath: /lib/modules
-          readOnly: true
         - name: shared-data
           mountPath: /shared
         startupProbe:
@@ -263,13 +226,23 @@ spec:
             sleep 5
           done
           
-          echo "Waiting for qBittorrent config to be ready..."
-          # Wait for config file to be created by wireguard container
-          while [ ! -f /shared/qbittorrent-config/qBittorrent/qBittorrent.conf ]; do
-            echo "Waiting for config file..."
-            sleep 2
-          done
+          echo "Creating qBittorrent config to bind only to VPN interface..."
           
+          # Create config directory with proper ownership
+          mkdir -p /config/qBittorrent
+
+          if [ -f /shared/forwarded_port ]; then
+            FORWARDED_PORT=$(cat /shared/forwarded_port)
+            echo "Found existing forwarded port: $FORWARDED_PORT"
+          else
+            FORWARDED_PORT="6881"
+            echo "No existing port found, using default: $FORWARDED_PORT"
+          fi
+          
+          # Create qBittorrent.conf that binds only to VPN interface using printf to avoid YAML issues
+          printf '[Application]\nFileLogger\\Age=1\nFileLogger\\AgeType=1\nFileLogger\\Backup=true\nFileLogger\\DeleteOld=true\nFileLogger\\Enabled=false\nFileLogger\\MaxSizeBytes=66560\nFileLogger\\Path=/config/qBittorrent/logs\n\n[AutoRun]\nenabled=false\nprogram=\n\n[BitTorrent]\nSession\\AddTorrentStopped=false\nSession\\AnonymousModeEnabled=false\nSession\\DefaultSavePath=/downloads/\nSession\\ExcludedFileNames=\nSession\\Interface=pia\nSession\\InterfaceName=pia\nSession\\Port=%s\nSession\\QueueingSystemEnabled=true\nSession\\ReannounceWhenAddressChanged=true\nSession\\SSL\\Port=%s\nSession\\ShareLimitAction=Stop\nSession\\TempPath=/downloads/incomplete/\nSession\\TempPathEnabled=true\n\n[Core]\nAutoDeleteAddedTorrentFile=Never\n\n[LegalNotice]\nAccepted=true\n\n[Meta]\nMigrationVersion=8\n\n[Network]\nPortForwardingEnabled=false\nProxy\\HostnameLookupEnabled=false\nProxy\\Profiles\\BitTorrent=true\nProxy\\Profiles\\Misc=true\nProxy\\Profiles\\RSS=true\n\n[Preferences]\nConnection\\PortRangeMin=6881\nConnection\\UPnP=false\nDownloads\\SavePath=/downloads/\nDownloads\\TempPath=/downloads/incomplete/\nGeneral\\Locale=en\nGeneral\\StatusbarExternalIPDisplayed=true\nMailNotification\\req_auth=true\nWebUI\\Address=*\nWebUI\\AuthSubnetWhitelist=@Invalid()\nWebUI\\LocalHostAuth=false\nWebUI\\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"\nWebUI\\ServerDomains=*\n\n[RSS]\nAutoDownloader\\DownloadRepacks=true\nAutoDownloader\\SmartEpisodeFilter=s(\\\\d+)e(\\\\d+), (\\\\d+)x(\\\\d+), "(\\\\d{4}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{1,2})", "(\\\\d{1,2}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{4})"\n' "$FORWARDED_PORT" "$FORWARDED_PORT" > /config/qBittorrent/qBittorrent.conf
+          
+          echo "qBittorrent config created - VPN interface binding enforced"
           echo "VPN and config ready, starting qBittorrent..."
           exec /init
         ports:
@@ -326,14 +299,8 @@ spec:
             cpu: "2000m"
       
       volumes:
-      - name: wireguard-config
-        emptyDir: {}
       - name: shared-data
         emptyDir: {}
-      - name: lib-modules
-        hostPath:
-          path: /lib/modules
-          type: Directory
       - name: qbittorrent-config
         persistentVolumeClaim:
           claimName: qbittorrent-config
