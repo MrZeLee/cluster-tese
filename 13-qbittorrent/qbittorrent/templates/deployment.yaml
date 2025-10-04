@@ -79,6 +79,11 @@ spec:
           done
           echo "VPN interface ready!"
           
+          echo "Resolving PIA API IP before setting iptables..."
+          # Resolve PIA API IP while DNS is still available
+          PIA_API_IP=$(nslookup privateinternetaccess.com | grep -A 1 "Name:" | grep "Address:" | awk '{print $2}' | head -1)
+          echo "PIA API IP resolved: $PIA_API_IP"
+          
           echo "Setting up secure iptables rules..."
           
           # Flush existing rules and set default policies
@@ -95,6 +100,15 @@ spec:
           iptables -A OUTPUT -o eth0 -p tcp --sport 8080 -j ACCEPT
           iptables -A INPUT -i eth0 -p tcp --dport 8080 -j ACCEPT
           
+          # Allow HTTPS to specific PIA API IP only (for VPN reconnection)
+          if [ -n "$PIA_API_IP" ]; then
+            iptables -A OUTPUT -o eth0 -d $PIA_API_IP -p tcp --dport 443 -j ACCEPT
+            iptables -A INPUT -i eth0 -s $PIA_API_IP -p tcp --sport 443 -j ACCEPT
+            echo "Added PIA API access for $PIA_API_IP"
+          else
+            echo "WARNING: Could not resolve PIA API IP"
+          fi
+          
           # Allow ALL other traffic ONLY through VPN interface
           iptables -A OUTPUT -o pia -j ACCEPT
           iptables -A INPUT -i pia -j ACCEPT
@@ -103,7 +117,7 @@ spec:
           iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
           iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
           
-          echo "Secure iptables rules applied - web UI on eth0, torrents through VPN only"
+          echo "Secure iptables rules applied - web UI + PIA API on eth0, torrents through VPN only"
           
           echo "PIA VPN setup completed, monitoring for port changes..."
           
