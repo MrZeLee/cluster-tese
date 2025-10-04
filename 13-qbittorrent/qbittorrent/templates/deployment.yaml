@@ -318,7 +318,7 @@ spec:
         - name: sonarr-config
           mountPath: /config
         - name: jellyfin-media-shared
-          mountPath: /data
+          mountPath: /downloads
         startupProbe:
           httpGet:
             path: /
