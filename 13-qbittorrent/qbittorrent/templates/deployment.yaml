@@ -213,7 +213,7 @@ spec:
             - |
               # Check if WireGuard interface is up
               wg show pia > /dev/null 2>&1
-          initialDelaySeconds: 120
+          initialDelaySeconds: 30
           periodSeconds: 15
           timeoutSeconds: 10
           failureThreshold: 20  # Allow 5 minutes for VPN setup
@@ -276,12 +276,6 @@ spec:
         - containerPort: 8080
           name: webui
           protocol: TCP
-        - containerPort: 6881
-          name: torrent-tcp
-          protocol: TCP
-        - containerPort: 6881
-          name: torrent-udp
-          protocol: UDP
         env:
         - name: PUID
           value: "1000"
