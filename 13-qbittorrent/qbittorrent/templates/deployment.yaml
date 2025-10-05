@@ -47,7 +47,7 @@ spec:
           export PIA_PF=true  # Enable port forwarding
           export PIA_DNS=true
           export PIA_CONNECT=true  # Connect and maintain port forwarding
-          export MAX_LATENCY=0.05
+          export MAX_LATENCY=0.1
           
           # # If PREFERRED_REGION is set, use it; otherwise auto-select best server
           # if [ -n "${PIA_REGION}" ]; then
