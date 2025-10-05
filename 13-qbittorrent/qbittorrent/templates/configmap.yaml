@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-config-template
+  namespace: media-server
+data:
+  qBittorrent.conf: |
+    [Application]
+    FileLogger\Age=1
+    FileLogger\AgeType=1
+    FileLogger\Backup=true
+    FileLogger\DeleteOld=true
+    FileLogger\Enabled=false
+    FileLogger\MaxSizeBytes=66560
+    FileLogger\Path=/config/qBittorrent/logs
+
+    [AutoRun]
+    enabled=false
+    program=
+
+    [BitTorrent]
+    Session\AddTorrentStopped=false
+    Session\AnonymousModeEnabled=false
+    Session\DefaultSavePath=/downloads/
+    Session\ExcludedFileNames=
+    Session\Interface=pia
+    Session\InterfaceName=pia
+    Session\Port=PLACEHOLDER_PORT
+    Session\QueueingSystemEnabled=true
+    Session\ReannounceWhenAddressChanged=true
+    Session\SSL\Port=PLACEHOLDER_PORT
+    Session\ShareLimitAction=Stop
+    Session\TempPath=/downloads/incomplete/
+    Session\TempPathEnabled=true
+
+    [Core]
+    AutoDeleteAddedTorrentFile=Never
+
+    [LegalNotice]
+    Accepted=true
+
+    [Meta]
+    MigrationVersion=8
+
+    [Network]
+    PortForwardingEnabled=false
+    Proxy\HostnameLookupEnabled=false
+    Proxy\Profiles\BitTorrent=true
+    Proxy\Profiles\Misc=true
+    Proxy\Profiles\RSS=true
+
+    [Preferences]
+    Connection\PortRangeMin=6881
+    Connection\UPnP=false
+    Downloads\SavePath=/downloads/
+    Downloads\TempPath=/downloads/incomplete/
+    General\Locale=en
+    General\StatusbarExternalIPDisplayed=true
+    MailNotification\req_auth=true
+    WebUI\Address=*
+    WebUI\AuthSubnetWhitelist=@Invalid()
+    WebUI\LocalHostAuth=false
+    WebUI\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"
+    WebUI\ServerDomains=*
+
+    [RSS]
+    AutoDownloader\DownloadRepacks=true
+    AutoDownloader\SmartEpisodeFilter=s(\\d+)e(\\d+), (\\d+)x(\\d+), "(\\d{4}[.\\-]\\d{1,2}[.\\-]\\d{1,2})", "(\\d{1,2}[.\\-]\\d{1,2}[.\\d{4})"

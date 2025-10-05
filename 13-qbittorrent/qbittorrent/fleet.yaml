@@ -1,5 +1,8 @@
 defaultNamespace: media-server
 
+labels:
+  app: qbittorrent
+
 helm:
   releaseName: qbittorrent
 
@@ -39,3 +42,8 @@ paused: false
 # Deployment strategy can be configured if needed (for larger or more complex deployments)
 rolloutStrategy:
   maxUnavailable: 10%
+
+dependsOn:
+  - selector:
+    matchLabels:
+      app: qbittorrent-secrets

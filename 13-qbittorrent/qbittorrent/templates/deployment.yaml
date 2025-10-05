@@ -54,10 +54,10 @@ spec:
           export PIA_CONNECT=true  # Connect and maintain port forwarding
           export MAX_LATENCY=0.05
           
-          # If PREFERRED_REGION is set, use it; otherwise auto-select best server
-          if [ -n "${PIA_REGION}" ]; then
-            export PREFERRED_REGION="${PIA_REGION}"
-          fi
+          # # If PREFERRED_REGION is set, use it; otherwise auto-select best server
+          # if [ -n "${PIA_REGION}" ]; then
+          #   export PREFERRED_REGION="${PIA_REGION}"
+          # fi
           
           # Create shared directory structure
           mkdir -p /shared
@@ -157,8 +157,6 @@ spec:
             secretKeyRef:
               name: qbittorrent-secrets
               key: qb-admin-password
-        - name: PIA_REGION
-          value: ""  # Leave empty for auto-select, or set to: us_east, us_west, ca_toronto, uk_london, etc.
         securityContext:
           capabilities:
             add:
@@ -226,11 +224,12 @@ spec:
             sleep 5
           done
           
-          echo "Creating qBittorrent config to bind only to VPN interface..."
+          echo "Setting up qBittorrent config with VPN interface binding..."
           
           # Create config directory with proper ownership
           mkdir -p /config/qBittorrent
 
+          # Get the forwarded port from shared volume or use default
           if [ -f /shared/forwarded_port ]; then
             FORWARDED_PORT=$(cat /shared/forwarded_port)
             echo "Found existing forwarded port: $FORWARDED_PORT"
@@ -239,70 +238,10 @@ spec:
             echo "No existing port found, using default: $FORWARDED_PORT"
           fi
           
-          # Create qBittorrent.conf that binds only to VPN interface
-          cat > /config/qBittorrent/qBittorrent.conf << EOF
-          [Application]
-          FileLogger\\Age=1
-          FileLogger\\AgeType=1
-          FileLogger\\Backup=true
-          FileLogger\\DeleteOld=true
-          FileLogger\\Enabled=false
-          FileLogger\\MaxSizeBytes=66560
-          FileLogger\\Path=/config/qBittorrent/logs
-
-          [AutoRun]
-          enabled=false
-          program=
-
-          [BitTorrent]
-          Session\\AddTorrentStopped=false
-          Session\\AnonymousModeEnabled=false
-          Session\\DefaultSavePath=/downloads/
-          Session\\ExcludedFileNames=
-          Session\\Interface=pia
-          Session\\InterfaceName=pia
-          Session\\Port=$FORWARDED_PORT
-          Session\\QueueingSystemEnabled=true
-          Session\\ReannounceWhenAddressChanged=true
-          Session\\SSL\\Port=$FORWARDED_PORT
-          Session\\ShareLimitAction=Stop
-          Session\\TempPath=/downloads/incomplete/
-          Session\\TempPathEnabled=true
-
-          [Core]
-          AutoDeleteAddedTorrentFile=Never
-
-          [LegalNotice]
-          Accepted=true
-
-          [Meta]
-          MigrationVersion=8
-
-          [Network]
-          PortForwardingEnabled=false
-          Proxy\\HostnameLookupEnabled=false
-          Proxy\\Profiles\\BitTorrent=true
-          Proxy\\Profiles\\Misc=true
-          Proxy\\Profiles\\RSS=true
-
-          [Preferences]
-          Connection\\PortRangeMin=6881
-          Connection\\UPnP=false
-          Downloads\\SavePath=/downloads/
-          Downloads\\TempPath=/downloads/incomplete/
-          General\\Locale=en
-          General\\StatusbarExternalIPDisplayed=true
-          MailNotification\\req_auth=true
-          WebUI\\Address=*
-          WebUI\\AuthSubnetWhitelist=@Invalid()
-          WebUI\\LocalHostAuth=false
-          WebUI\\Password_PBKDF2="@ByteArray(OD1/qxr2DLOE+D1mkYkHSw==:6/X/1pf2nspdVp14UvRIBGwBV1GOheAuw5gHrHNy0flIMEfofKscD/VYbmFojgnf1NBV5s+NIwivIwMbBOiEeQ==)"
-          WebUI\\ServerDomains=*
-
-          [RSS]
-          AutoDownloader\\DownloadRepacks=true
-          AutoDownloader\\SmartEpisodeFilter=s(\\\\d+)e(\\\\d+), (\\\\d+)x(\\\\d+), "(\\\\d{4}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{1,2})", "(\\\\d{1,2}[.\\\\-]\\\\d{1,2}[.\\\\-]\\\\d{4})"
-          EOF
+          # Copy template and replace port placeholder
+          cp /config-template/qBittorrent.conf /config/qBittorrent/qBittorrent.conf
+          sed -i "s/PLACEHOLDER_PORT/$FORWARDED_PORT/g" /config/qBittorrent/qBittorrent.conf
+          echo "qBittorrent config updated with port: $FORWARDED_PORT"
           
           echo "qBittorrent config created - VPN interface binding enforced"
           echo "VPN and config ready, starting qBittorrent..."
@@ -328,6 +267,8 @@ spec:
           mountPath: /downloads
         - name: shared-data
           mountPath: /shared
+        - name: qbittorrent-config-template
+          mountPath: /config-template
         startupProbe:
           httpGet:
             path: /
@@ -426,6 +367,9 @@ spec:
       - name: sonarr-config
         persistentVolumeClaim:
           claimName: sonarr-config
+      - name: qbittorrent-config-template
+        configMap:
+          name: qbittorrent-config-template
       
       # Containers in same pod automatically share network namespace
       
