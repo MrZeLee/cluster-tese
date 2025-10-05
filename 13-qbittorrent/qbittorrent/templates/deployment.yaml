@@ -54,11 +54,6 @@ spec:
           export PIA_CONNECT=true  # Connect and maintain port forwarding
           export MAX_LATENCY=0.05
           
-          # # If PREFERRED_REGION is set, use it; otherwise auto-select best server
-          # if [ -n "${PIA_REGION}" ]; then
-          #   export PREFERRED_REGION="${PIA_REGION}"
-          # fi
-          
           # Create shared directory structure
           mkdir -p /shared
           
@@ -157,12 +152,12 @@ spec:
             secretKeyRef:
               name: qbittorrent-secrets
               key: qb-admin-password
-        securityContext:
-          capabilities:
-            add:
-            - NET_ADMIN
-            - SYS_MODULE
-          privileged: true
+        # securityContext:
+        #   capabilities:
+        #     add:
+        #     - NET_ADMIN
+        #     - SYS_MODULE
+        #   privileged: true
         volumeMounts:
         - name: shared-data
           mountPath: /shared
