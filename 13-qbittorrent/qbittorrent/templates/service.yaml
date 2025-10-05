@@ -28,3 +28,19 @@ spec:
     targetPort: 8989
     protocol: TCP
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jackett-webui
+  namespace: media-server
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+  - name: webui
+    port: 9117
+    targetPort: 9117
+    protocol: TCP
+  type: ClusterIP
