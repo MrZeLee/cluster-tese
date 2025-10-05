@@ -74,3 +74,29 @@ spec:
       sans:
       - jackett.{{ .Values.cloudflare_zone }}
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: flaresolverr-ingress
+  namespace: media-server
+  labels:
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+    - web
+  routes:
+    - match: Host(`flaresolverr.{{ .Values.cloudflare_zone }}`)
+      kind: Rule
+      services:
+        - name: flaresolverr-webapi
+          port: 8191
+  tls:
+    domains:
+    - main: {{ .Values.cloudflare_zone }}
+      sans:
+      - flaresolverr.{{ .Values.cloudflare_zone }}
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls

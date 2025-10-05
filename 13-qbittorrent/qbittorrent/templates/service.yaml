@@ -44,3 +44,19 @@ spec:
     targetPort: 9117
     protocol: TCP
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flaresolverr-webapi
+  namespace: media-server
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+  - name: webapi
+    port: 8191
+    targetPort: 8191
+    protocol: TCP
+  type: ClusterIP
