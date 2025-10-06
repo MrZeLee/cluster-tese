@@ -136,6 +136,8 @@ spec:
       # FlareSolverr container
       - name: flaresolverr
         image: ghcr.io/flaresolverr/flaresolverr:latest
+        securityContext:
+          runAsUser: 0
         command:
         - /bin/bash
         - -c
