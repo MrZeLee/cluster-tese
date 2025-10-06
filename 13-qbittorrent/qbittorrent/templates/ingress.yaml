@@ -63,17 +63,17 @@ spec:
     - websecure
     - web
   routes:
-    - match: Host(`jackett.{{ .Values.cloudflare_zone }}`)
+    - match: Host(`jackett.local.{{ .Values.cloudflare_zone }}`)
       kind: Rule
       services:
         - name: jackett-webui
           port: 9117
   tls:
     domains:
-    - main: {{ .Values.cloudflare_zone }}
+    - main: local.{{ .Values.cloudflare_zone }}
       sans:
-      - jackett.{{ .Values.cloudflare_zone }}
-    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+      - jackett.local.{{ .Values.cloudflare_zone }}
+    secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls
 
 ---
 apiVersion: traefik.io/v1alpha1
@@ -89,14 +89,14 @@ spec:
     - websecure
     - web
   routes:
-    - match: Host(`flaresolverr.{{ .Values.cloudflare_zone }}`)
+    - match: Host(`flaresolverr.local.{{ .Values.cloudflare_zone }}`)
       kind: Rule
       services:
         - name: flaresolverr-webapi
           port: 8191
   tls:
     domains:
-    - main: {{ .Values.cloudflare_zone }}
+    - main: local.{{ .Values.cloudflare_zone }}
       sans:
-      - flaresolverr.{{ .Values.cloudflare_zone }}
-    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+      - flaresolverr.local.{{ .Values.cloudflare_zone }}
+    secretName: local-{{ .Values.cloudflare_zone_hyphen }}-tls

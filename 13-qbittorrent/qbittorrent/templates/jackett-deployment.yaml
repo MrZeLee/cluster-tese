@@ -1,0 +1,207 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackett
+  namespace: media-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jackett
+  template:
+    metadata:
+      labels:
+        app: jackett
+    spec:
+      containers:
+      # WireGuard VPN sidecar without port forwarding
+      - name: wireguard
+        image: alpine:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          
+          echo "Installing dependencies..."
+          apk add --no-cache curl jq git bash wireguard-tools iptables iproute2 dnsmasq bind-tools
+          
+          echo "Cloning PIA manual-connections repository..."
+          cd /tmp
+          git clone https://github.com/MrZeLee/manual-connections.git
+          cd manual-connections
+          
+          echo "Setting up PIA WireGuard connection without Port Forwarding..."
+          
+          # Run PIA setup script with environment variables
+          export PIA_USER="${PIA_USERNAME}"
+          export PIA_PASS="${PIA_PASSWORD}"
+          export VPN_PROTOCOL=wireguard
+          export DISABLE_IPV6=yes
+          export DIP_TOKEN=no
+          export AUTOCONNECT=true  # Auto-select best server
+          export PIA_PF=false  # Disable port forwarding
+          export PIA_DNS=true
+          export PIA_CONNECT=true
+          export MAX_LATENCY=0.1
+          
+          echo "Starting PIA VPN with run_setup.sh..."
+          ./run_setup.sh &
+          PIA_PID=$!
+          
+          # Wait for VPN to be fully established
+          echo "Waiting for PIA VPN to be ready..."
+          while ! wg show pia > /dev/null 2>&1; do
+            echo "Waiting for VPN interface pia to be ready..."
+            sleep 5
+          done
+          echo "VPN interface ready!"
+          
+          echo "PIA VPN setup completed, monitoring connection..."
+          
+          # Monitor VPN connection health
+          while true; do
+            # Check if PIA process is still running
+            if ! kill -0 $PIA_PID 2>/dev/null; then
+              echo "ERROR: PIA process died, restarting..."
+              ./run_setup.sh &
+              PIA_PID=$!
+            fi
+            
+            sleep 30
+          done
+        env:
+        - name: PIA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-username
+        - name: PIA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qbittorrent-secrets
+              key: pia-password
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            - SYS_MODULE
+          privileged: true
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Check if WireGuard interface is up
+              wg show pia > /dev/null 2>&1
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 20  # Allow 5 minutes for VPN setup
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Check if WireGuard is running and connected
+              wg show pia > /dev/null 2>&1
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Check if WireGuard is connected
+              wg show pia > /dev/null 2>&1
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+      
+      # Jackett container
+      - name: jackett
+        image: linuxserver/jackett:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for VPN interface before starting Jackett..."
+          # Wait for pia interface to be available for binding
+          while ! ip link show pia > /dev/null 2>&1; do
+            echo "Waiting for VPN interface pia..."
+            sleep 5
+          done
+          
+          echo "VPN interface ready, starting Jackett..."
+          exec /init
+        ports:
+        - containerPort: 9117
+          name: webui
+          protocol: TCP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/New_York"
+        - name: AUTO_UPDATE
+          value: "true"
+        volumeMounts:
+        - name: jackett-config
+          mountPath: /config
+        startupProbe:
+          tcpSocket:
+            port: 9117
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 18  # Allow 3 minutes for startup
+        livenessProbe:
+          tcpSocket:
+            port: 9117
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 9117
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      
+      volumes:
+      - name: jackett-config
+        persistentVolumeClaim:
+          claimName: jackett-config
+      - name: jellyfin-media-shared
+        persistentVolumeClaim:
+          claimName: jellyfin-media
+      
+      # Use cluster DNS initially, VPN will override DNS via iptables rules
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

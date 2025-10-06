@@ -21,7 +21,7 @@ metadata:
   namespace: media-server
 spec:
   selector:
-    app: qbittorrent
+    app: sonarr
   ports:
   - name: webui
     port: 8989
@@ -37,7 +37,7 @@ metadata:
   namespace: media-server
 spec:
   selector:
-    app: qbittorrent
+    app: jackett
   ports:
   - name: webui
     port: 9117
@@ -53,7 +53,7 @@ metadata:
   namespace: media-server
 spec:
   selector:
-    app: qbittorrent
+    app: flaresolverr
   ports:
   - name: webapi
     port: 8191
