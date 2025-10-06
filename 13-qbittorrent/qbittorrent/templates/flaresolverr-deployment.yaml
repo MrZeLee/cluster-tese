@@ -153,7 +153,7 @@ spec:
           done
           
           echo "VPN interface ready, starting FlareSolverr..."
-          exec python -u /app/src/flaresolverr.py
+          exec /usr/local/bin/python -u /app/flaresolverr.py
         ports:
         - containerPort: 8191
           name: webapi
