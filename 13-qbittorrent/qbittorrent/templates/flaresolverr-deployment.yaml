@@ -140,6 +140,9 @@ spec:
         - /bin/bash
         - -c
         - |
+          echo "Installing iproute2 for ip command..."
+          apt-get update && apt-get install -y iproute2
+          
           echo "Waiting for VPN interface before starting FlareSolverr..."
           # Wait for pia interface to be available for binding
           while ! ip link show pia > /dev/null 2>&1; do
