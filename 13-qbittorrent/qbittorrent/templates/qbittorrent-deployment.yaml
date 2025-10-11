@@ -291,10 +291,10 @@ spec:
           failureThreshold: 3
         resources:
           requests:
-            memory: "4Gi"
+            memory: "256Mi"
             cpu: "200m"
           limits:
-            memory: "6Gi"
+            memory: "4Gi"
             cpu: "2000m"
       
       volumes:
