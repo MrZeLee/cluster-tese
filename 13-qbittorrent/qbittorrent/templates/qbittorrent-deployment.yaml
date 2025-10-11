@@ -294,7 +294,7 @@ spec:
             memory: "256Mi"
             cpu: "200m"
           limits:
-            memory: "4Gi"
+            memory: "6Gi"
             cpu: "2000m"
       
       volumes:
