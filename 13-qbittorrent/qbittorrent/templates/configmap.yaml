@@ -22,6 +22,8 @@ data:
     Session\AddTorrentStopped=false
     Session\AnonymousModeEnabled=false
     Session\DefaultSavePath=/downloads/
+    Session\DiskIOReadMode=DisableOSCache
+    Session\DiskIOWriteMode=WriteThrough
     Session\ExcludedFileNames=
     Session\Interface=pia
     Session\InterfaceName=pia
