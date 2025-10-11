@@ -15,6 +15,15 @@ spec:
       labels:
         app: qbittorrent
     spec:
+      # ADD THIS SECTION - pod-level security context
+      securityContext:
+        sysctls:
+        - name: net.ipv4.conf.all.src_valid_mark
+          value: "1"
+        - name: net.ipv6.conf.all.disable_ipv6
+          value: "1"
+        - name: net.ipv6.conf.default.disable_ipv6
+          value: "1"
       containers:
       # WireGuard VPN sidecar with integrated PIA setup
       - name: wireguard
