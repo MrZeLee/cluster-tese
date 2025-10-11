@@ -13,6 +13,7 @@ data:
     FileLogger\Enabled=false
     FileLogger\MaxSizeBytes=66560
     FileLogger\Path=/config/qBittorrent/logs
+    MemoryWorkingSetLimit=4096
 
     [AutoRun]
     enabled=false
@@ -21,9 +22,12 @@ data:
     [BitTorrent]
     Session\AddTorrentStopped=false
     Session\AnonymousModeEnabled=false
+    Session\AsyncIOThreadsCount=16
+    Session\CheckingMemUsageSize=256
     Session\DefaultSavePath=/downloads/
-    Session\DiskIOReadMode=DisableOSCache
-    Session\DiskIOWriteMode=WriteThrough
+    Session\DiskIOReadMode=EnableOSCache
+    Session\DiskIOWriteMode=DisableOSCache
+    Session\DiskQueueSize=4194304
     Session\ExcludedFileNames=
     Session\Interface=pia
     Session\InterfaceName=pia
