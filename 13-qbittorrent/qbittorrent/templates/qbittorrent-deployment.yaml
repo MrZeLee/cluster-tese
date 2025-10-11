@@ -159,7 +159,7 @@ spec:
             add:
             - NET_ADMIN
             - SYS_MODULE
-          privileged: true
+            - NET_RAW
         volumeMounts:
         - name: shared-data
           mountPath: /shared
