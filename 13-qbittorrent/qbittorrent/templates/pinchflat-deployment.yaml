@@ -63,14 +63,17 @@ spec:
           
           # Monitor VPN connection
           while true; do
+
             # Check if PIA process is still running
-            if ! kill -0 $PIA_PID 2>/dev/null; then
+            kill -0 $PIA_PID
+            if ! $?; then
               echo "ERROR: PIA process died, restarting..."
               ./run_setup.sh &
               PIA_PID=$!
             fi
-            
+
             sleep 30
+
           done
         env:
         - name: PIA_USERNAME
