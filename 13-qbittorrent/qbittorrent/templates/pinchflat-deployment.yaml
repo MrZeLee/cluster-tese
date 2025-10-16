@@ -30,13 +30,13 @@ spec:
           # Set up alternative Alpine mirrors with retry logic
           echo "Setting up alternative Alpine repositories..."
           cat > /etc/apk/repositories << EOF
-http://dl-cdn.alpinelinux.org/alpine/v3.22/main
-http://dl-cdn.alpinelinux.org/alpine/v3.22/community
-http://dl-4.alpinelinux.org/alpine/v3.22/main
-http://dl-4.alpinelinux.org/alpine/v3.22/community
-http://mirror.ps.kz/alpine/v3.22/main
-http://mirror.ps.kz/alpine/v3.22/community
-EOF
+          http://dl-cdn.alpinelinux.org/alpine/v3.22/main
+          http://dl-cdn.alpinelinux.org/alpine/v3.22/community
+          http://dl-4.alpinelinux.org/alpine/v3.22/main
+          http://dl-4.alpinelinux.org/alpine/v3.22/community
+          http://mirror.ps.kz/alpine/v3.22/main
+          http://mirror.ps.kz/alpine/v3.22/community
+          EOF
           
           # Retry package installation with fallback
           for i in {1..3}; do
@@ -50,11 +50,11 @@ EOF
               if [ $i -eq 3 ]; then
                 echo "All attempts failed, trying fallback repositories..."
                 cat > /etc/apk/repositories << EOF
-http://mirror.ps.kz/alpine/v3.22/main
-http://mirror.ps.kz/alpine/v3.22/community
-http://dl-4.alpinelinux.org/alpine/v3.22/main
-http://dl-4.alpinelinux.org/alpine/v3.22/community
-EOF
+                http://mirror.ps.kz/alpine/v3.22/main
+                http://mirror.ps.kz/alpine/v3.22/community
+                http://dl-4.alpinelinux.org/alpine/v3.22/main
+                http://dl-4.alpinelinux.org/alpine/v3.22/community
+                EOF
                 apk update || echo "WARNING: Package index update failed, proceeding anyway..."
               fi
             fi
