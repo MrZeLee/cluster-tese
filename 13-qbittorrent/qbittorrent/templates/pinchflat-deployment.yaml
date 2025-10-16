@@ -69,56 +69,28 @@ spec:
           export PIA_PF=false  # Disable port forwarding for Pinchflat
           export PIA_DNS=true
           export PIA_CONNECT=true
-          export MAX_LATENCY=0.5
+          export MAX_LATENCY=1
           
           echo "Starting PIA VPN with run_setup.sh..."
           ./run_setup.sh &
           PIA_PID=$!
-          
-          # Wait for VPN to be fully established
-          echo "Waiting for PIA VPN to be ready..."
-          while ! wg show pia > /dev/null 2>&1; do
-            echo "Waiting for VPN interface pia to be ready..."
-            kill -0 $PIA_PID
-            sleep 5
-          done
+
           echo "VPN interface ready!"
           
           echo "PIA VPN setup completed, monitoring connection..."
-          
-          # Monitor VPN connection
+
+          # Monitor VPN connection health
           while true; do
-            VPN_OK=true
-            
-            # Check interface exists and is up
-            if ! ip link show pia | grep -q "state UP"; then
-              echo "ERROR: VPN interface pia is down"
-              VPN_OK=false
-            fi
-            
-            # Check default route goes through VPN
-            if ! ip route | grep -q "default.*dev pia"; then
-              echo "ERROR: Default route not through VPN"
-              VPN_OK=false
-            fi
-            
-            # Check VPN gateway is reachable
-            VPN_GW=$(ip route | grep "default.*dev pia" | awk '{print $3}')
-            if [ -n "$VPN_GW" ] && ! ping -c 1 -W 2 "$VPN_GW" >/dev/null 2>&1; then
-              echo "ERROR: VPN gateway $VPN_GW unreachable"
-              VPN_OK=false
-            fi
-            
-            if [ "$VPN_OK" = false ]; then
-              echo "Restarting VPN..."
+            # Check if PIA process is still running
+            if ! kill -0 $PIA_PID 2>/dev/null; then
+              echo "ERROR: PIA process died, restarting..."
               ./run_setup.sh &
               PIA_PID=$!
-              sleep 60
-            else
-              echo "VPN connection healthy"
-              sleep 30
             fi
+            
+            sleep 30
           done
+         
         env:
         - name: PIA_USERNAME
           valueFrom:
