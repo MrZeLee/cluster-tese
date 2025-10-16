@@ -26,6 +26,40 @@ spec:
           set -e
           
           echo "Installing dependencies..."
+          
+          # Set up alternative Alpine mirrors with retry logic
+          echo "Setting up alternative Alpine repositories..."
+          cat > /etc/apk/repositories << EOF
+http://dl-cdn.alpinelinux.org/alpine/v3.22/main
+http://dl-cdn.alpinelinux.org/alpine/v3.22/community
+http://dl-4.alpinelinux.org/alpine/v3.22/main
+http://dl-4.alpinelinux.org/alpine/v3.22/community
+http://mirror.ps.kz/alpine/v3.22/main
+http://mirror.ps.kz/alpine/v3.22/community
+EOF
+          
+          # Retry package installation with fallback
+          for i in {1..3}; do
+            echo "Attempt $i/3: Updating package index..."
+            if apk update; then
+              echo "Package index updated successfully"
+              break
+            else
+              echo "Attempt $i/3 failed, waiting 10s before retry..."
+              sleep 10
+              if [ $i -eq 3 ]; then
+                echo "All attempts failed, trying fallback repositories..."
+                cat > /etc/apk/repositories << EOF
+http://mirror.ps.kz/alpine/v3.22/main
+http://mirror.ps.kz/alpine/v3.22/community
+http://dl-4.alpinelinux.org/alpine/v3.22/main
+http://dl-4.alpinelinux.org/alpine/v3.22/community
+EOF
+                apk update || echo "WARNING: Package index update failed, proceeding anyway..."
+              fi
+            fi
+          done
+          
           apk add --no-cache curl jq git bash wireguard-tools iptables iproute2 dnsmasq bind-tools
           
           echo "Cloning PIA manual-connections repository..."
@@ -64,17 +98,36 @@ spec:
           
           # Monitor VPN connection
           while true; do
-
-            # Check if PIA process is still running
-            kill -0 $PIA_PID
-            if ! $?; then
-              echo "ERROR: PIA process died, restarting..."
+            VPN_OK=true
+            
+            # Check interface exists and is up
+            if ! ip link show pia | grep -q "state UP"; then
+              echo "ERROR: VPN interface pia is down"
+              VPN_OK=false
+            fi
+            
+            # Check default route goes through VPN
+            if ! ip route | grep -q "default.*dev pia"; then
+              echo "ERROR: Default route not through VPN"
+              VPN_OK=false
+            fi
+            
+            # Check VPN gateway is reachable
+            VPN_GW=$(ip route | grep "default.*dev pia" | awk '{print $3}')
+            if [ -n "$VPN_GW" ] && ! ping -c 1 -W 2 "$VPN_GW" >/dev/null 2>&1; then
+              echo "ERROR: VPN gateway $VPN_GW unreachable"
+              VPN_OK=false
+            fi
+            
+            if [ "$VPN_OK" = false ]; then
+              echo "Restarting VPN..."
               ./run_setup.sh &
               PIA_PID=$!
+              sleep 60
+            else
+              echo "VPN connection healthy"
+              sleep 30
             fi
-
-            sleep 30
-
           done
         env:
         - name: PIA_USERNAME
