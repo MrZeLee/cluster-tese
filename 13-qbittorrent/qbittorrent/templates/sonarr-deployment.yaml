@@ -66,8 +66,7 @@ spec:
           RESTART_INTERVAL=43200  # 12 hours in seconds
           
           test_external_connectivity() {
-            local services=("ifconfig.me" "icanhazip.com" "checkip.amazonaws.com")
-            for service in "${services[@]}"; do
+            for service in "ifconfig.me" "icanhazip.com" "checkip.amazonaws.com"; do
               if timeout 5 curl -s --max-time 3 "$service" >/dev/null 2>&1; then
                 return 0
               fi
