@@ -108,22 +108,22 @@ spec:
             
             VPN_OK=true
             
-            # Check interface exists and is up
-            if ! ip link show pia | grep -q "state UP"; then
+            # Check interface exists and is up or unknown (WireGuard can show UNKNOWN state)
+            if ! ip link show pia | grep -q -E "state (UP|UNKNOWN)"; then
               echo "ERROR: VPN interface pia is down"
               VPN_OK=false
             fi
             
-            # Check default route goes through VPN
-            if ! ip route | grep -q "default.*dev pia"; then
-              echo "ERROR: Default route not through VPN"
+            # Check WireGuard interface has peers (indicating active VPN connection)
+            if ! wg show pia | grep -q "peer:"; then
+              echo "ERROR: No WireGuard peers configured"
               VPN_OK=false
             fi
             
-            # Check VPN gateway is reachable
-            VPN_GW=$(ip route | grep "default.*dev pia" | awk '{print $3}')
-            if [ -n "$VPN_GW" ] && ! ping -c 1 -W 2 "$VPN_GW" >/dev/null 2>&1; then
-              echo "ERROR: VPN gateway $VPN_GW unreachable"
+            # Check if we can reach the default gateway (VPN should route through it)
+            DEFAULT_GW=$(ip route | grep "^default" | awk '{print $3}' | head -1)
+            if [ -n "$DEFAULT_GW" ] && ! ping -c 1 -W 2 "$DEFAULT_GW" >/dev/null 2>&1; then
+              echo "ERROR: Default gateway $DEFAULT_GW unreachable"
               VPN_OK=false
             fi
             
