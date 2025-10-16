@@ -55,6 +55,7 @@ spec:
           echo "Waiting for PIA VPN to be ready..."
           while ! wg show pia > /dev/null 2>&1; do
             echo "Waiting for VPN interface pia to be ready..."
+            kill -0 $PIA_PID
             sleep 5
           done
           echo "VPN interface ready!"
