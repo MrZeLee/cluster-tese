@@ -45,10 +45,7 @@ spec:
           export PIA_PF=false  # Disable port forwarding for Pinchflat
           export PIA_DNS=true
           export PIA_CONNECT=true
-          export MAX_LATENCY=0.1
-          
-          # Create shared directory structure
-          mkdir -p /shared
+          export MAX_LATENCY=0.5
           
           echo "Starting PIA VPN with run_setup.sh..."
           ./run_setup.sh &
@@ -92,9 +89,6 @@ spec:
             - NET_ADMIN
             - SYS_MODULE
           privileged: true
-        volumeMounts:
-        - name: shared-data
-          mountPath: /shared
         startupProbe:
           exec:
             command:
@@ -184,8 +178,6 @@ spec:
         - name: jellyfin-media-shared
           mountPath: /downloads
           subPath: youtube
-        - name: shared-data
-          mountPath: /shared
         startupProbe:
           httpGet:
             path: /
@@ -219,8 +211,6 @@ spec:
             cpu: "1000m"
       
       volumes:
-      - name: shared-data
-        emptyDir: {}
       - name: pinchflat-config
         persistentVolumeClaim:
           claimName: pinchflat-config
