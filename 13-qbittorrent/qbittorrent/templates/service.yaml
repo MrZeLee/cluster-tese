@@ -76,3 +76,19 @@ spec:
     targetPort: 7878
     protocol: TCP
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinchflat-webui
+  namespace: media-server
+spec:
+  selector:
+    app: pinchflat
+  ports:
+  - name: webui
+    port: 8945
+    targetPort: 8945
+    protocol: TCP
+  type: ClusterIP

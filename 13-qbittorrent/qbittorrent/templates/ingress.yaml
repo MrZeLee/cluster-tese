@@ -126,3 +126,29 @@ spec:
       sans:
       - radarr.{{ .Values.cloudflare_zone }}
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pinchflat-ingress
+  namespace: media-server
+  labels:
+  annotations:
+    kubernetes.io/ingress.class: traefik-external
+spec:
+  entryPoints:
+    - websecure
+    - web
+  routes:
+    - match: Host(`pinchflat.{{ .Values.cloudflare_zone }}`)
+      kind: Rule
+      services:
+        - name: pinchflat-webui
+          port: 8945
+  tls:
+    domains:
+    - main: {{ .Values.cloudflare_zone }}
+      sans:
+      - pinchflat.{{ .Values.cloudflare_zone }}
+    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls

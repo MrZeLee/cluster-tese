@@ -54,4 +54,18 @@ spec:
       storage: 1Gi
 
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pinchflat-config
+  namespace: media-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+
+---
 # Note: We don't create qbittorrent-downloads PVC here because we'll use the shared jellyfin-media volume
