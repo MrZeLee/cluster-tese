@@ -253,30 +253,31 @@ spec:
         - name: jellyfin-media-shared
           mountPath: /downloads
           subPath: youtube
-        startupProbe:
-          httpGet:
-            path: /
-            port: 8945
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 12  # Allow 2 minutes for startup
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8945
-          initialDelaySeconds: 10
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8945
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+# Temporarily disabled probes to allow VPN establishment
+        # startupProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8945
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 12  # Allow 2 minutes for startup
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8945
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 30
+        #   timeoutSeconds: 10
+        #   failureThreshold: 3
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8945
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
         resources:
           requests:
             memory: "256Mi"
