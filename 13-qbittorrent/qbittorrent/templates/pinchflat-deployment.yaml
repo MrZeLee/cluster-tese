@@ -226,7 +226,7 @@ spec:
           done
           
           echo "VPN interface ready, starting Pinchflat..."
-          exec /app/bin/pinchflat start
+          exec /app/bin/docker_start
         ports:
         - containerPort: 8945
           name: webui
