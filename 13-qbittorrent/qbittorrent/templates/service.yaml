@@ -92,3 +92,19 @@ spec:
     targetPort: 8945
     protocol: TCP
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bazarr-webui
+  namespace: media-server
+spec:
+  selector:
+    app: bazarr
+  ports:
+  - name: webui
+    port: 6767
+    targetPort: 6767
+    protocol: TCP
+  type: ClusterIP
