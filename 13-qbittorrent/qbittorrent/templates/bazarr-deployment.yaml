@@ -223,30 +223,34 @@ spec:
           mountPath: /tv
         - name: jellyfin-media-shared
           mountPath: /anime
-        startupProbe:
-          httpGet:
-            path: /
-            port: 6767
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 18  # Allow 3 minutes for startup
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 6767
-          initialDelaySeconds: 10
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 6767
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+# Temporarily disabled probes to allow VPN establishment
+        # startupProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 6767
+        #     scheme: HTTP
+        #   initialDelaySeconds: 90
+        #   periodSeconds: 15
+        #   timeoutSeconds: 10
+        #   failureThreshold: 20  # Allow 5 minutes for startup
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 6767
+        #     scheme: HTTP
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 30
+        #   timeoutSeconds: 10
+        #   failureThreshold: 3
+        # readinessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 6767
+        #     scheme: HTTP
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 15
+        #   timeoutSeconds: 10
+        #   failureThreshold: 3
         resources:
           requests:
             memory: "128Mi"
