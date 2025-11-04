@@ -31,6 +31,10 @@ spec:
           value: "http"
         - name: WEBHOOK_URL
           value: "http://n8n.local:5678"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
         volumeMounts:
         - name: n8n-data
           mountPath: /home/node/.n8n
