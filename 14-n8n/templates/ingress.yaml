@@ -22,20 +22,3 @@ spec:
       sans:
       - n8n.{{ .Values.cloudflare_zone }}
     secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
-
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: n8n-tcp
-  namespace: n8n
-  annotations: 
-    kubernetes.io/ingress.class: traefik-external
-spec:
-  routes:
-    - match: HostSNI(`n8n.{{ .Values.cloudflare_zone }}`)
-      services:
-        - name: n8n
-          port: 5678
-  tls:
-    secretName: {{ .Values.cloudflare_zone_hyphen }}-tls

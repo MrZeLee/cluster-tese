@@ -30,9 +30,17 @@ spec:
         - name: N8N_PORT
           value: "5678"
         - name: N8N_PROTOCOL
-          value: "http"
+          value: "https"
         - name: WEBHOOK_URL
-          value: "http://n8n.local:5678"
+          value: "https://n8n.{{ .Values.cloudflare_zone }}"
+        - name: DB_SQLITE_POOL_SIZE
+          value: "3"
+        - name: N8N_RUNNERS_ENABLED
+          value: "true"
+        - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
+          value: "false"
+        - name: N8N_GIT_NODE_DISABLE_BARE_REPOS
+          value: "true"
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
