@@ -6,7 +6,7 @@ metadata:
   namespace: default
   annotations:
     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
-    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "cattle-system,media-server,n8n"
+    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "cattle-system,media-server,n8n,activepieces"
 spec:
   secretName: {{ .Values.cloudflare_zone_hyphen }}-tls
   issuerRef:

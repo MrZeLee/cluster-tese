@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activepieces
+  namespace: activepieces
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: activepieces
+  template:
+    metadata:
+      labels:
+        app: activepieces
+    spec:
+      containers:
+      - name: activepieces
+        image: activepieces/activepieces:latest
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        env:
+        - name: AP_ENGINE_EXECUTABLE_PATH
+          value: "dist/packages/engine/main.js"
+        - name: AP_POSTGRES_DATABASE
+          value: "activepieces"
+        - name: AP_POSTGRES_HOST
+          value: "postgres"
+        - name: AP_POSTGRES_PORT
+          value: "5432"
+        - name: AP_POSTGRES_USERNAME
+          value: "postgres"
+        - name: AP_POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: activepieces-secrets
+              key: postgres-password
+        - name: AP_REDIS_HOST
+          value: "redis"
+        - name: AP_REDIS_PORT
+          value: "6379"
+        - name: AP_FRONTEND_URL
+          value: "https://activepieces.{{ .Values.cloudflare_zone }}"
+        - name: AP_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: activepieces-secrets
+              key: encryption-key
+        - name: AP_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: activepieces-secrets
+              key: jwt-secret
+        volumeMounts:
+        - name: activepieces-data
+          mountPath: /root/.activepieces
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+      volumes:
+      - name: activepieces-data
+        persistentVolumeClaim:
+          claimName: activepieces-data
+
+      restartPolicy: Always
