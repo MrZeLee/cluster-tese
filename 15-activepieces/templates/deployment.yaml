@@ -54,20 +54,26 @@ spec:
             secretKeyRef:
               name: activepieces-secrets
               key: jwt-secret
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=2048"
         volumeMounts:
         - name: activepieces-data
           mountPath: /root/.activepieces
+        - name: cache
+          mountPath: /usr/src/app/cache
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "200m"
           limits:
-            memory: "1Gi"
+            memory: "3Gi"
             cpu: "1000m"
 
       volumes:
       - name: activepieces-data
         persistentVolumeClaim:
           claimName: activepieces-data
+      - name: cache
+        emptyDir: {}
 
       restartPolicy: Always
