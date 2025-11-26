@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cloudflared-tunnel
+description: cloudflared-tunnel
+version: 0.0.0
+appVersion: 0.0.0
+
