@@ -55,7 +55,7 @@ spec:
               name: activepieces-secrets
               key: jwt-secret
         - name: NODE_OPTIONS
-          value: "--max-old-space-size=4096"
+          value: "--max-old-space-size=6144"
         volumeMounts:
         - name: activepieces-data
           mountPath: /root/.activepieces
@@ -63,10 +63,10 @@ spec:
           mountPath: /usr/src/app/cache
         resources:
           requests:
-            memory: "1Gi"
+            memory: "2Gi"
             cpu: "200m"
           limits:
-            memory: "5Gi"
+            memory: "8Gi"
             cpu: "1000m"
 
       volumes:
