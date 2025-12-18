@@ -24,10 +24,15 @@ spec:
         - -c
         - |
           set -e
-          
+
           echo "Installing dependencies..."
-          apk add --no-cache curl jq git bash wireguard-tools iptables iproute2 dnsmasq bind-tools
-          
+          apk add --no-cache curl jq git bash wireguard-tools iptables iproute2 dnsmasq bind-tools coreutils openresolv
+
+          # Fix resolvconf to prevent signature mismatch
+          if [ -f /etc/resolv.conf ]; then
+            resolvconf -u || true
+          fi
+
           echo "Cloning PIA manual-connections repository..."
           cd /tmp
           git clone https://github.com/MrZeLee/manual-connections.git
