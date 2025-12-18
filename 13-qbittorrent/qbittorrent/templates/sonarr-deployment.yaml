@@ -34,11 +34,16 @@ spec:
               echo "Installing dependencies..."
               apk add --no-cache curl jq git bash wireguard-tools iptables iproute2 dnsmasq bind-tools
 
+              # Temporarily restore public DNS for git clone (dnsmasq not running yet)
+              echo "nameserver 8.8.8.8" > /etc/resolv.conf
+              echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+
               echo "Cloning PIA manual-connections repository..."
               cd /tmp
               git clone https://github.com/MrZeLee/manual-connections.git
               cd manual-connections
 
+              # PIA scripts will now configure dnsmasq with PIA DNS
               echo "Setting up PIA WireGuard connection without Port Forwarding..."
 
               # Run PIA setup script with environment variables
